@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Défavorisation Laurentides : 1. Carte vide</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
+  <style>
+    html, body { margin: 0; padding: 0; height: 100%; }
+    #map { height: 100vh; }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+  <script>
+    // Initialiser la carte centrée sur les Laurentides
+    const carte = L.map('map').setView([46.5, -74.5], 8);
+
+    // Ajouter le fond de carte du gouvernement du Québec (réseau routier, toponymie)
+    // {-y} : ce service numérote les rangées de tuiles du bas vers le haut (format TMS)
+    L.tileLayer('https://geoegl.msp.gouv.qc.ca/carto/tms/1.0.0/carte_gouv_qc_public@EPSG_3857/{z}/{x}/{-y}.png', {
+      attribution: '© Gouvernement du Québec | Santé Québec Laurentides, DSP'
+    }).addTo(carte);
+
+    // ✅ Résultat attendu : le fond de carte du gouvernement du Québec s'affiche,
+    // centré sur les Laurentides, sans aucune donnée superposée.
+  </script>
+</body>
+</html>
