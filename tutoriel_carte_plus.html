@@ -1,0 +1,1491 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tutoriel : construire la carte d'analyse Leaflet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300;0,400;0,600;0,700;0,900;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#140C74; --teal:#21AEAD; --blue:#0482D3; --white:#FFFFFF;
+  --teal-d:#178f8e; --teal-l:#5fd0cf; --blue-d:#0366a6; --blue-l:#6aa6e8; --indigo:#5b54c0;
+  --bg:#070620; --bg2:#0b0930; --panel:#11103e; --panel2:#181a52;
+  --line:#2a2870; --line2:#1d1b50;
+  --ink:#eef0fb; --ink2:#c4c8ea; --muted:#8b8fc4;
+  --accent:var(--teal); --accent2:var(--blue);
+  --fs:1rem;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Source Sans 3',system-ui,sans-serif;font-size:var(--fs);line-height:1.6}
+.wrap{max-width:900px;margin:0 auto;padding:2.5rem 1.5rem 4rem}
+header{border-bottom:2px solid var(--line);padding-bottom:1.5rem;margin-bottom:2rem}
+.badge{display:inline-block;background:var(--accent);color:var(--navy);font-weight:700;font-size:.75rem;letter-spacing:.04em;text-transform:uppercase;padding:.25rem .6rem;border-radius:4px;margin-bottom:.75rem}
+h1{margin:0 0 .4rem;font-size:1.9rem;font-weight:900;color:var(--white);line-height:1.2}
+.subtitle{color:var(--ink2);font-size:1.05rem}
+.signature{margin-top:1rem;font-size:.85rem;color:var(--muted)}
+.fontctrl{position:fixed;top:1rem;right:1rem;display:flex;gap:.4rem;z-index:10}
+.fontctrl button{width:32px;height:32px;border-radius:6px;border:1px solid var(--line);background:var(--panel);color:var(--ink);font-weight:700;cursor:pointer;font-family:'JetBrains Mono',monospace}
+.fontctrl button:hover{background:var(--panel2);border-color:var(--teal)}
+.section-title{font-size:1.3rem;color:var(--white);margin:2.5rem 0 1rem;font-weight:700}
+.intro p,.intro li{color:var(--ink2)}
+.intro ul{padding-left:1.2rem}
+.carte-intro{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:1.2rem 1.4rem;margin-bottom:1.2rem}
+.carte-intro h3{margin:0 0 .5rem;color:var(--white);font-size:1.02rem}
+.sommaire{list-style:none;padding:0;margin:0;columns:2;column-gap:2rem}
+.sommaire li{break-inside:avoid;display:flex;justify-content:space-between;gap:.6rem;padding:.3rem 0;border-bottom:1px solid var(--line2)}
+.sommaire a{color:var(--ink);text-decoration:none;display:flex;gap:.6rem}
+.sommaire a:hover{color:var(--teal)}
+.sommaire .mono{color:var(--teal)}
+.sommaire em{color:var(--muted);font-style:normal;font-size:.82rem;white-space:nowrap}
+table.reperes{width:100%;border-collapse:collapse;font-size:.92rem;margin:.6rem 0}
+table.reperes th,table.reperes td{text-align:left;padding:.45rem .6rem;border-bottom:1px solid var(--line2);vertical-align:top}
+table.reperes th{color:var(--muted);font-weight:600;font-size:.8rem}
+table.reperes td:first-child{white-space:nowrap;color:var(--teal);font-weight:700}
+.etape{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:1.6rem 1.6rem 1.3rem;margin:2.2rem 0 1.2rem;position:relative;scroll-margin-top:1rem}
+.etape-num{position:absolute;top:-16px;left:1.4rem;background:var(--accent);color:var(--navy);font-family:'JetBrains Mono',monospace;font-weight:700;min-width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1rem;padding:0 6px}
+.etape h2{margin:.3rem 0 .1rem;font-size:1.3rem;color:var(--white)}
+.etape h3{margin:1.3rem 0 .4rem;font-size:.82rem;letter-spacing:.12em;text-transform:uppercase;color:var(--teal)}
+.etape p,.etape li{color:var(--ink2)}
+.etape ol,.etape ul{padding-left:1.3rem;margin:.3rem 0}
+.etape li{margin:.25rem 0}
+.duree{font-size:.85rem;color:var(--muted)!important;margin:0 0 .8rem}
+.notions{display:flex;flex-wrap:wrap;gap:.35rem;align-items:center;margin:.6rem 0}
+.notions span{font-size:.8rem;color:var(--muted);margin-right:.2rem}
+kbd{font-family:'JetBrains Mono',monospace;background:var(--bg2);border:1px solid var(--line);border-radius:4px;padding:.05rem .35rem;font-size:.85em;color:var(--teal-l)}
+code{font-family:'JetBrains Mono',monospace;background:var(--bg2);border:1px solid var(--line);border-radius:4px;padding:.05rem .35rem;font-size:.86em;color:var(--blue-l)}
+.code{margin:.8rem 0;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:#05041a}
+.code-tete{display:flex;justify-content:space-between;align-items:center;padding:.4rem .5rem .4rem .9rem;background:var(--panel2);border-bottom:1px solid var(--line);font-size:.82rem;font-weight:700;color:var(--ink)}
+.copier{background:var(--teal);color:var(--navy);border:0;border-radius:6px;padding:.3rem .8rem;font:inherit;font-size:.8rem;font-weight:700;cursor:pointer}
+.copier:hover{background:var(--teal-l)}
+.copier.fait{background:var(--blue-l)}
+pre{margin:0;padding:.9rem 1rem;max-height:440px;overflow:auto;font-size:.78rem;line-height:1.5}
+pre code{background:none;border:0;padding:0;color:#d6daf5;font-size:1em;white-space:pre}
+pre .cm{color:#6fb9b8}
+.encadre{border-radius:8px;margin:1rem 0 .4rem;overflow:hidden;border:1px solid}
+.encadre-tete{padding:.45rem .9rem;font-weight:700;font-size:.9rem}
+.encadre ul{margin:.5rem 0 .7rem;padding:0 1rem 0 2.2rem}
+.encadre.ok{border-color:#1a985055;background:#1a985012}
+.encadre.ok .encadre-tete{background:#1a985030;color:#9fe0b8}
+.encadre.piege{border-color:#d3540055;background:#d3540012}
+.encadre.piege .encadre-tete{background:#d3540030;color:#ffc59a}
+.liens{display:flex;flex-wrap:wrap;gap:.6rem 1rem;align-items:center;margin-top:1rem;font-size:.85rem;color:var(--muted)}
+.lien-etape{background:var(--panel2);border:1px solid var(--line);color:var(--ink);text-decoration:none;padding:.4rem .9rem;border-radius:8px;font-weight:700}
+.lien-etape:hover{border-color:var(--teal);color:var(--teal)}
+.comprendre li{margin:.45rem 0}
+.astuce{background:var(--panel2);border-left:3px solid var(--teal);padding:.8rem 1rem;border-radius:0 8px 8px 0;margin:1rem 0;color:var(--ink2)}
+a{color:var(--teal)}
+footer{margin-top:3rem;padding-top:1.2rem;border-top:1px solid var(--line);font-size:.85rem;color:var(--muted)}
+@media (max-width:700px){.sommaire{columns:1}.wrap{padding:2rem 1rem 3rem}h1{font-size:1.5rem}.fontctrl{display:none}}
+</style>
+</head>
+<body>
+<div class="fontctrl"><button onclick="taille(-1)" title="Réduire le texte">A−</button><button onclick="taille(1)" title="Agrandir le texte">A+</button></div>
+<div class="wrap">
+<header>
+  <div class="badge">Procédurier · Formation C.A.R.T.O.S.</div>
+  <h1>De la carte du module 3 à une carte d'analyse complète</h1>
+  <div class="subtitle">Tutoriel pas à pas : 11 étapes pour construire, avec Leaflet seul, une carte de la défavorisation avec panneau d'analyse, filtres, matrice croisée, analyse de proximité et exports.</div>
+  <div class="signature">Santé Québec Laurentides · Direction de santé publique · Mise à jour : 2026-11-04</div>
+</header>
+
+<div class="intro">
+  <div class="carte-intro">
+    <h3>Avant de commencer</h3>
+    <ul>
+      <li>Votre carte du module 3 fonctionne, et le fichier <code>laurentides_defavorisation.js</code> est dans votre dossier de travail (ou celui du dossier <code>secours/</code>).</li>
+      <li>Un éditeur de texte : VS Code ou le Bloc-notes (dans ce cas, enregistrez avec <b>Type : Tous les fichiers</b> et <b>Encodage : UTF-8</b>).</li>
+      <li>Un navigateur, avec la console ouverte pendant les tests : <kbd>F12</kbd> &gt; Console.</li>
+      <li>Durée totale : environ 3 heures. Vous pouvez vous arrêter après n'importe quelle étape : la carte fonctionne toujours.</li>
+    </ul>
+  </div>
+
+  <div class="carte-intro">
+    <h3>Comment se déroule le tutoriel</h3>
+    <p>À l'étape 1, vous copiez un fichier complet, <code>carte_analyse.html</code>. Ensuite, chaque étape ajoute une capacité en collant de 1 à 4 blocs de code <b>au-dessus d'un repère</b> déjà présent dans le fichier. Vous n'avez jamais à modifier ni à supprimer le code existant.</p>
+    <table class="reperes">
+      <tr><th>Repère</th><th>Où il se trouve</th><th>Ce qu'on y colle</th></tr>
+      <tr><td>A</td><td>À la fin de la balise <code>&lt;style&gt;</code></td><td>L'apparence (CSS)</td></tr>
+      <tr><td>B</td><td>Dans l'en-tête, en haut de la page</td><td>Listes, champ de recherche, boutons (HTML)</td></tr>
+      <tr><td>C</td><td>Dans l'onglet Analyse du panneau</td><td>Les blocs d'analyse (HTML)</td></tr>
+      <tr><td>D</td><td>À la fin du script, juste avant <code>demarrer();</code></td><td>Le comportement (JavaScript)</td></tr>
+    </table>
+    <div class="astuce"><b>La technique pour coller au bon endroit :</b> <kbd>Ctrl</kbd>+<kbd>F</kbd>, tapez <code>REPÈRE D</code> (ou A, B, C), cliquez au tout début de cette ligne, puis <kbd>Ctrl</kbd>+<kbd>V</kbd>. Le bloc s'insère au-dessus du repère, qui reste en place pour l'étape suivante.</div>
+    <p>Après chaque étape : enregistrez, actualisez (<kbd>F5</kbd>) et vérifiez la console. Si quelque chose cloche, le bouton <b>Voir le résultat de l'étape</b> ouvre la version de référence; <kbd>Ctrl</kbd>+<kbd>U</kbd> y affiche son code pour comparer.</p>
+  </div>
+
+  <div class="carte-intro">
+    <h3>Les messages de la console</h3>
+    <ul>
+      <li><b>« … is not defined »</b> : une étape précédente manque, ou un bloc a été collé sous la ligne <code>demarrer();</code>.</li>
+      <li><b>« Identifier '…' has already been declared »</b> : un bloc a été collé deux fois.</li>
+      <li><b>« Cannot set properties of null »</b> ou <b>« Cannot read properties of null »</b> : le bloc HTML (repère B ou C) de l'étape n'a pas été collé.</li>
+      <li><b>« Unexpected token »</b> : un bloc incomplet (une accolade ou une parenthèse manque). Recopiez le bloc entier avec le bouton Copier.</li>
+      <li>Messages jaunes « Tracking Prevention blocked access to storage » dans Edge : simples avertissements, sans effet sur la carte.</li>
+    </ul>
+  </div>
+
+  <div class="carte-intro">
+    <h3>Les 11 étapes</h3>
+    <ul class="sommaire"><li><a href="#etape-1"><span class="mono">01</span>Une nouvelle structure de page</a><em>15 min</em></li><li><a href="#etape-2"><span class="mono">02</span>Fonds de carte, sélecteur de couches et échelle</a><em>10 min</em></li><li><a href="#etape-3"><span class="mono">03</span>Le profil de la municipalité cliquée</a><em>20 min</em></li><li><a href="#etape-4"><span class="mono">04</span>Le choix de l'indicateur et une légende interactive</a><em>20 min</em></li><li><a href="#etape-5"><span class="mono">05</span>Le filtre par MRC et la recherche</a><em>15 min</em></li><li><a href="#etape-6"><span class="mono">06</span>Le tableau de bord de l'onglet Analyse</a><em>20 min</em></li><li><a href="#etape-7"><span class="mono">07</span>La matrice croisée et le mode « matérielle × sociale »</a><em>25 min</em></li><li><a href="#etape-8"><span class="mono">08</span>L'analyse de proximité</a><em>20 min</em></li><li><a href="#etape-9"><span class="mono">09</span>Contrôles personnalisés, géolocalisation, étiquettes et points</a><em>15 min</em></li><li><a href="#etape-10"><span class="mono">10</span>Le lien partageable et les exports</a><em>15 min</em></li><li><a href="#etape-11"><span class="mono">11</span>Les finitions</a><em>10 min</em></li></ul>
+  </div>
+</div>
+
+<section class="etape" id="etape-1"><div class="etape-num">1</div>
+<h2>Une nouvelle structure de page</h2><p class="duree">Étape 1 sur 11 · environ 15 min</p>
+<p>Repartir d'une page organisée en trois zones (en-tête, panneau latéral, carte) et d'un code prêt à recevoir les ajouts des étapes suivantes. La carte affiche les mêmes municipalités qu'au module 3, avec une info-bulle au survol.</p>
+<div class="notions"><span>Leaflet :</span><code>L.map()</code><code>L.tileLayer()</code><code>L.geoJSON({ style, onEachFeature })</code><code>bindTooltip()</code><code>setStyle() · resetStyle()</code><code>bringToFront()</code><code>fitBounds()</code></div>
+<h3>Ce que vous faites</h3><ol><li>Dans le dossier qui contient <code>laurentides_defavorisation.js</code>, créez un nouveau fichier nommé <code>carte_analyse.html</code>.</li><li>Copiez le fichier complet ci-dessous (bouton <b>Copier</b>), collez-le dans <code>carte_analyse.html</code> et enregistrez.</li><li>Ouvrez <code>carte_analyse.html</code> dans le navigateur (double-clic).</li></ol>
+<div class="code"><div class="code-tete"><span>Fichier complet · carte_analyse.html</span><button class="copier" type="button">Copier</button></div><pre><code>&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;fr&quot;&gt;
+&lt;head&gt;
+  &lt;meta charset=&quot;UTF-8&quot;&gt;
+  &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot;&gt;
+  &lt;title&gt;Défavorisation Laurentides : carte d&#x27;analyse&lt;/title&gt;
+  &lt;link rel=&quot;stylesheet&quot; href=&quot;https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css&quot;&gt;
+  &lt;link href=&quot;https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap&quot; rel=&quot;stylesheet&quot;&gt;
+  &lt;style&gt;
+<span class="cm">    /* ===== Charte de la DSP ===== */</span>
+    :root {
+      --marine: #140C74; --teal: #21AEAD; --bleu: #0482D3; --blanc: #FFFFFF;
+      --fond: #070620; --fond2: #0b0930; --panneau: #11103e; --panneau2: #181a52;
+      --ligne: #2a2870; --ligne2: #1d1b50;
+      --texte: #eef0fb; --texte2: #c4c8ea; --discret: #8b8fc4;
+      --taille: 1rem;
+    }
+<span class="cm">    * { box-sizing: border-box; margin: 0; padding: 0; }</span>
+    html, body { height: 100%; }
+    body { font-family: &quot;Source Sans 3&quot;, system-ui, sans-serif; font-size: var(--taille);
+           background: var(--fond); color: var(--texte); overflow: hidden; }
+    .mono { font-family: &quot;JetBrains Mono&quot;, monospace; }
+
+<span class="cm">    /* ===== Structure : en-tête, puis panneau | carte ===== */</span>
+    .app { display: grid; grid-template-rows: auto 1fr; height: 100vh; height: 100dvh; }
+    .entete { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding: 10px 18px;
+              background: linear-gradient(100deg, var(--fond2), #161354 60%, #1c2a8a);
+              border-bottom: 1px solid var(--ligne); z-index: 1200; }
+    .marque { display: flex; align-items: center; gap: 12px; margin-right: auto; }
+    .logo { width: 38px; height: 38px; border-radius: 11px; display: grid; place-items: center;
+            background: radial-gradient(circle at 32% 28%, var(--teal), var(--marine) 75%); }
+    .marque h1 { font-size: 1.18rem; line-height: 1.1; }
+    .marque h1 span { color: var(--teal); }
+    .marque p { font-size: .78rem; color: var(--texte2); }
+    .outils { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .outils select, .outils input, .bouton {
+      height: 34px; background: var(--panneau2); color: var(--texte); border: 1px solid var(--ligne);
+      border-radius: 9px; padding: 0 11px; font: inherit; font-size: .86rem; font-weight: 600; cursor: pointer; }
+    .outils input { font-weight: 400; cursor: text; width: 170px; }
+    .bouton:hover, .outils select:focus, .outils input:focus { border-color: var(--teal); outline: none; }
+    .bouton.actif { border-color: var(--teal); color: var(--teal); }
+
+    .principal { position: relative; display: grid; grid-template-columns: 400px 1fr; min-height: 0; }
+    .panneau { background: var(--panneau); border-right: 1px solid var(--ligne); overflow-y: auto; }
+    #carte { height: 100%; width: 100%; background: var(--fond); }
+
+<span class="cm">    /* ===== Onglets du panneau ===== */</span>
+    .onglets { display: flex; position: sticky; top: 0; z-index: 5; background: var(--panneau);
+               border-bottom: 1px solid var(--ligne2); padding: 10px 14px 0; }
+    .onglets button { flex: 1; background: none; border: 0; border-bottom: 2px solid transparent; color: var(--discret);
+                      padding: 9px 4px; font: inherit; font-weight: 700; cursor: pointer; }
+    .onglets button.actif { color: var(--texte); border-bottom-color: var(--teal); }
+    .onglet { display: none; padding: 14px 18px 28px; }
+    .onglet.actif { display: block; }
+    .surtitre { font-size: .7rem; letter-spacing: .14em; text-transform: uppercase; color: var(--teal);
+                font-weight: 700; margin: 18px 0 8px; }
+    .indice { font-size: .8rem; color: var(--discret); line-height: 1.5; margin-bottom: 10px; }
+    .vide { text-align: center; padding: 48px 14px; color: var(--discret); line-height: 1.55; }
+
+<span class="cm">    /* ===== Leaflet aux couleurs de la charte ===== */</span>
+    .leaflet-container { font-family: &quot;Source Sans 3&quot;, system-ui, sans-serif; }
+    .leaflet-bar a { background: var(--panneau) !important; color: var(--texte) !important; border-color: var(--ligne) !important; }
+    .leaflet-control-attribution { background: #070620cc !important; color: var(--discret) !important; }
+    .leaflet-control-attribution a { color: var(--teal) !important; }
+    .leaflet-interactive:focus { outline: none; }
+    .infobulle { background: var(--panneau2) !important; border: 1px solid var(--ligne) !important;
+                 color: var(--texte) !important; border-radius: 9px !important; padding: 8px 12px !important; }
+    .infobulle b { font-size: .95rem; }
+    .infobulle .q { display: flex; gap: 10px; margin-top: 4px; font-family: &quot;JetBrains Mono&quot;, monospace; font-size: .8rem; }
+    .infobulle i { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 4px; }
+    .leaflet-tooltip-top:before { border-top-color: var(--ligne) !important; }
+
+<span class="cm">    /* ===== Message temporaire ===== */</span>
+    #message { position: fixed; top: 76px; left: 50%; transform: translateX(-50%); z-index: 3000;
+               background: var(--panneau2); border: 1px solid var(--teal); color: var(--texte);
+               padding: 9px 16px; border-radius: 10px; font-size: .86rem; display: none; max-width: 90vw; }
+
+<span class="cm">    /* ===== Petit écran : la carte en haut, le panneau en bas ===== */</span>
+    @media (max-width: 800px) {
+      .principal { grid-template-columns: 1fr; grid-template-rows: minmax(0, 1fr) 45vh; }
+      #carte { order: 1; }
+      .panneau { order: 2; border-right: 0; border-top: 1px solid var(--ligne); }
+      .marque p { display: none; }
+      .outils input { width: 130px; }
+    }
+
+<span class="cm">    /* ▲ REPÈRE A : collez le CSS des étapes suivantes au-dessus de cette ligne ▲ */</span>
+  &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;div class=&quot;app&quot;&gt;
+  &lt;header class=&quot;entete&quot;&gt;
+    &lt;div class=&quot;marque&quot;&gt;
+      &lt;div class=&quot;logo&quot;&gt;&lt;svg width=&quot;21&quot; height=&quot;21&quot; viewBox=&quot;0 0 24 24&quot; fill=&quot;none&quot; stroke=&quot;#fff&quot; stroke-width=&quot;2&quot;&gt;&lt;path d=&quot;M12 2C8 2 5 5 5 9c0 5 7 13 7 13s7-8 7-13c0-4-3-7-7-7z&quot;/&gt;&lt;circle cx=&quot;12&quot; cy=&quot;9&quot; r=&quot;2.4&quot;/&gt;&lt;/svg&gt;&lt;/div&gt;
+      &lt;div&gt;
+        &lt;h1&gt;Défavorisation &lt;span&gt;Laurentides&lt;/span&gt;&lt;/h1&gt;
+        &lt;p&gt;Indice de Pampalon par municipalité · Santé Québec Laurentides, DSP&lt;/p&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;outils&quot;&gt;
+<span class="cm">      &lt;!-- ▲ REPÈRE B : collez les outils de l&#x27;en-tête au-dessus de cette ligne ▲ --&gt;</span>
+    &lt;/div&gt;
+  &lt;/header&gt;
+
+  &lt;main class=&quot;principal&quot;&gt;
+    &lt;aside class=&quot;panneau&quot; id=&quot;panneau&quot;&gt;
+      &lt;nav class=&quot;onglets&quot;&gt;
+        &lt;button data-onglet=&quot;analyse&quot; class=&quot;actif&quot;&gt;Analyse&lt;/button&gt;
+        &lt;button data-onglet=&quot;muni&quot;&gt;Municipalité&lt;/button&gt;
+      &lt;/nav&gt;
+      &lt;section class=&quot;onglet actif&quot; id=&quot;onglet-analyse&quot;&gt;
+        &lt;p class=&quot;indice&quot; id=&quot;intro-analyse&quot;&gt;Survolez une municipalité pour voir ses quintiles de défavorisation.&lt;/p&gt;
+<span class="cm">        &lt;!-- ▲ REPÈRE C : collez les blocs d&#x27;analyse au-dessus de cette ligne ▲ --&gt;</span>
+      &lt;/section&gt;
+      &lt;section class=&quot;onglet&quot; id=&quot;onglet-muni&quot;&gt;
+        &lt;div class=&quot;vide&quot; id=&quot;muni-vide&quot;&gt;Cliquez sur une municipalité de la carte pour afficher son profil.&lt;/div&gt;
+        &lt;div id=&quot;muni-profil&quot;&gt;&lt;/div&gt;
+      &lt;/section&gt;
+    &lt;/aside&gt;
+    &lt;div id=&quot;carte&quot;&gt;&lt;/div&gt;
+  &lt;/main&gt;
+&lt;/div&gt;
+&lt;div id=&quot;message&quot;&gt;&lt;/div&gt;
+
+&lt;script src=&quot;https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js&quot;&gt;&lt;/script&gt;
+<span class="cm">&lt;!-- Les données du module 3 : ce fichier crée la variable &quot;donnees&quot; --&gt;</span>
+&lt;script src=&quot;laurentides_defavorisation.js&quot;&gt;&lt;/script&gt;
+&lt;script&gt;
+<span class="cm">  /* =================================================================</span>
+     CŒUR DE LA CARTE (étape 1)
+     ================================================================= */
+
+<span class="cm">  // 1. La carte et le fond de carte du gouvernement du Québec</span>
+  const carte = L.map(&#x27;carte&#x27;).setView([46.3, -74.8], 8);
+  const ATTRIBUTION = &#x27;© Gouvernement du Québec | Santé Québec Laurentides, DSP&#x27;;
+  const fondReseau = L.tileLayer(&#x27;https://geoegl.msp.gouv.qc.ca/carto/tms/1.0.0/carte_gouv_qc_public@EPSG_3857/{z}/{x}/{-y}.png&#x27;, {
+    attribution: ATTRIBUTION,
+    maxZoom: 18
+  }).addTo(carte);
+
+<span class="cm">  // 2. Les couleurs : même palette (RdYlGn) qu&#x27;au module 2 et au module 3</span>
+  const QCOL = { 1: &#x27;#1a9850&#x27;, 2: &#x27;#91cf60&#x27;, 3: &#x27;#fee090&#x27;, 4: &#x27;#fc8d59&#x27;, 5: &#x27;#d73027&#x27; };
+  const GRIS = &#x27;#8b8fc4&#x27;;   // donnée manquante
+
+<span class="cm">  // 3. Les MRC, d&#x27;après les deux premiers chiffres du code municipal</span>
+  const MRC_PAR_CODE = {
+    &#x27;72&#x27;: &#x27;Deux-Montagnes&#x27;, &#x27;73&#x27;: &#x27;Thérèse-De Blainville&#x27;, &#x27;74&#x27;: &#x27;Mirabel&#x27;, &#x27;75&#x27;: &#x27;La Rivière-du-Nord&#x27;,
+    &#x27;76&#x27;: &#x27;Argenteuil&#x27;, &#x27;77&#x27;: &quot;Les Pays-d&#x27;en-Haut&quot;, &#x27;78&#x27;: &#x27;Les Laurentides&#x27;, &#x27;79&#x27;: &#x27;Antoine-Labelle&#x27;
+  };
+
+<span class="cm">  // 4. L&#x27;état de la carte : ce que l&#x27;utilisateur a choisi</span>
+  const etat = { indicateur: &#x27;mat&#x27;, mrc: &#x27;&#x27;, opacite: 0.78, selection: null };
+
+<span class="cm">  // 5. Les « rendez-vous » : chaque étape suivante y inscrit ses propres fonctions</span>
+  const municipalites = [];    // une fiche par municipalité (nom, MRC, quintiles, polygone...)
+  const quandPret = [];        // fonctions lancées une seule fois, quand la couche est créée
+  const quandRafraichir = [];  // fonctions lancées après chaque changement (indicateur, filtre...)
+  const quandSelection = [];   // fonctions lancées quand on choisit une municipalité
+  const filtres = [];          // une municipalité qui échoue à un filtre est estompée
+  let couleurDe = function (m) { return m.qm ? QCOL[m.qm] : null; };   // remplacée à l&#x27;étape 4
+  let interceptionClic = null; // permet à un outil (étape 8) de capter le clic sur la carte
+  let couche;                  // la couche GeoJSON des municipalités
+
+<span class="cm">  // 6. Petits outils</span>
+  function versQuintile(v) {
+    const n = Number(v);
+    return (n &gt;= 1 &amp;&amp; n &lt;= 5 &amp;&amp; Number.isInteger(n)) ? n : null;   // accepte aussi &quot;5&quot; (texte)
+  } // fin versQuintile()
+  function fmt(n, decimales) {
+    if (n === null || n === undefined || isNaN(n)) return &#x27;n.d.&#x27;;
+    return Number(n).toLocaleString(&#x27;fr-CA&#x27;, { minimumFractionDigits: decimales || 0, maximumFractionDigits: decimales || 0 });
+  } // fin fmt()
+  function esc(texte) {
+    return String(texte).replace(/[&amp;&lt;&gt;&quot;&#x27;]/g, function (c) {
+      return { &#x27;&amp;&#x27;: &#x27;&amp;amp;&#x27;, &#x27;&lt;&#x27;: &#x27;&amp;lt;&#x27;, &#x27;&gt;&#x27;: &#x27;&amp;gt;&#x27;, &#x27;&quot;&#x27;: &#x27;&amp;quot;&#x27;, &quot;&#x27;&quot;: &#x27;&amp;#39;&#x27; }[c];
+    });
+  } // fin esc()
+  function message(texte) {
+    const boite = document.getElementById(&#x27;message&#x27;);
+    boite.innerHTML = texte;
+    boite.style.display = &#x27;block&#x27;;
+    clearTimeout(boite.minuterie);
+    boite.minuterie = setTimeout(function () { boite.style.display = &#x27;none&#x27;; }, 3200);
+  } // fin message()
+
+<span class="cm">  // 7. Le centre géométrique d&#x27;un polygone (pour les étiquettes et les distances)</span>
+  function centre(layer) {
+    const anneaux = [];
+    (function parcourir(liste) {
+      if (liste.length &amp;&amp; liste[0].lat !== undefined) { anneaux.push(liste); } else { liste.forEach(parcourir); }
+    })(layer.getLatLngs());
+    let meilleur = null, plusGrandeAire = 0;
+    anneaux.forEach(function (a) {
+      let aire = 0, cx = 0, cy = 0;
+      for (let i = 0, j = a.length - 1; i &lt; a.length; j = i++) {
+        const f = a[j].lng * a[i].lat - a[i].lng * a[j].lat;
+        aire += f; cx += (a[j].lng + a[i].lng) * f; cy += (a[j].lat + a[i].lat) * f;
+      }
+      if (Math.abs(aire) &gt; plusGrandeAire) { plusGrandeAire = Math.abs(aire); meilleur = L.latLng(cy / (3 * aire), cx / (3 * aire)); }
+    });
+    return meilleur || layer.getBounds().getCenter();
+  } // fin centre()
+
+<span class="cm">  // 8. Le style de chaque municipalité</span>
+  function styleMunicipalite(feature) {
+    const m = feature.m;
+    const c = m ? couleurDe(m) : null;
+    const style = c
+      ? { fillColor: c, fillOpacity: etat.opacite, color: &#x27;#ffffff&#x27;, weight: 0.8, opacity: 0.8, dashArray: null }
+      : { fillColor: GRIS, fillOpacity: etat.opacite * 0.25, color: GRIS, weight: 0.8, opacity: 0.7, dashArray: &#x27;4 3&#x27; };
+    const passeLesFiltres = m ? filtres.every(function (f) { return f(m); }) : true;
+    if (!passeLesFiltres) {        // estomper ce qui est hors filtre
+      style.fillOpacity = style.fillOpacity * 0.15;
+      style.opacity = 0.15;
+    }
+    return style;
+  } // fin styleMunicipalite()
+
+<span class="cm">  // 9. L&#x27;info-bulle au survol</span>
+  function infobulle(m) {
+    function pastille(q) { return q ? &#x27;&lt;i style=&quot;background:&#x27; + QCOL[q] + &#x27;&quot;&gt;&lt;/i&gt;Q&#x27; + q : &#x27;n.d.&#x27;; }
+    return &#x27;&lt;b&gt;&#x27; + esc(m.nom) + &#x27;&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;color:var(--discret)&quot;&gt;MRC &#x27; + esc(m.mrc) + &#x27;&lt;/span&gt;&#x27; +
+           &#x27;&lt;div class=&quot;q&quot;&gt;&lt;span&gt;Mat. &#x27; + pastille(m.qm) + &#x27;&lt;/span&gt;&lt;span&gt;Soc. &#x27; + pastille(m.qs) + &#x27;&lt;/span&gt;&lt;/div&gt;&#x27;;
+  } // fin infobulle()
+
+<span class="cm">  // 10. Préparer chaque municipalité : sa fiche, son info-bulle, ses événements</span>
+  function preparer(feature, layer) {
+    const p = feature.properties;
+    const m = {
+      layer: layer,
+      feature: feature,
+      code: String(p.code_mun || &#x27;&#x27;),
+      nom: p.nom_mun || &#x27;Sans nom&#x27;,
+      qm: versQuintile(p.defav_mat_quintile),
+      qs: versQuintile(p.defav_soc_quintile)
+    };
+    m.mrc = MRC_PAR_CODE[m.code.slice(0, 2)] || &#x27;MRC inconnue&#x27;;
+    m.centre = centre(layer);
+    feature.m = m;
+    municipalites.push(m);
+
+    layer.bindTooltip(function () { return infobulle(m); }, { className: &#x27;infobulle&#x27;, sticky: true, direction: &#x27;top&#x27; });
+    layer.on(&#x27;mouseover&#x27;, function () { layer.setStyle({ weight: 2.5, color: &#x27;#ffffff&#x27;, opacity: 1 }); layer.bringToFront(); });
+    layer.on(&#x27;mouseout&#x27;, function () { couche.resetStyle(layer); });
+    layer.on(&#x27;click&#x27;, function (e) {
+      if (interceptionClic &amp;&amp; interceptionClic(e)) return;   // un outil a capté le clic (étape 8)
+      selectionner(m, false);
+    });
+  } // fin preparer()
+
+<span class="cm">  // 11. Les fonctions qui déclenchent les « rendez-vous »</span>
+  function rafraichir() {
+    couche.setStyle(styleMunicipalite);
+    quandRafraichir.forEach(function (f) { f(); });
+  } // fin rafraichir()
+  function selectionner(m, voler) {
+    etat.selection = m;
+    quandSelection.forEach(function (f) { f(m, voler); });
+  } // fin selectionner()
+  function demarrer() {
+    couche = L.geoJSON(donnees, {
+      style: styleMunicipalite,
+      onEachFeature: preparer,
+      bubblingMouseEvents: false    // un clic sur un polygone ne remonte pas jusqu&#x27;à la carte
+    }).addTo(carte);
+    carte.fitBounds(couche.getBounds(), { padding: [20, 20] });
+    quandPret.forEach(function (f) { f(); });
+    rafraichir();
+  } // fin demarrer()
+
+<span class="cm">  /* =================================================================</span>
+     INTERFACE (étape 1) : les onglets du panneau
+     ================================================================= */
+  function ouvrirOnglet(nom) {
+    document.querySelectorAll(&#x27;.onglets button&#x27;).forEach(function (b) { b.classList.toggle(&#x27;actif&#x27;, b.dataset.onglet === nom); });
+    document.querySelectorAll(&#x27;.onglet&#x27;).forEach(function (s) { s.classList.toggle(&#x27;actif&#x27;, s.id === &#x27;onglet-&#x27; + nom); });
+  } // fin ouvrirOnglet()
+  document.querySelector(&#x27;.onglets&#x27;).addEventListener(&#x27;click&#x27;, function (e) {
+    const bouton = e.target.closest(&#x27;button&#x27;);
+    if (bouton) ouvrirOnglet(bouton.dataset.onglet);
+  });
+
+<span class="cm">  /* =================================================================</span>
+     AJOUTS DES ÉTAPES SUIVANTES
+     ================================================================= */
+
+<span class="cm">  // ▲ REPÈRE D : collez le code des étapes suivantes au-dessus de cette ligne ▲</span>
+
+  demarrer();   // toujours en dernier : crée la couche et lance les « rendez-vous »
+&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre></div>
+<h3>Comprendre le code</h3><ul class="comprendre"><li><b>Les quatre repères.</b> Le fichier contient quatre lignes qui commencent par <code>▲ REPÈRE</code>. À chaque étape, vous collerez les nouveaux blocs <b>au-dessus</b> du repère indiqué. Vous n'aurez jamais à modifier le code déjà en place.</li><li><b>Les « rendez-vous ».</b> Le cœur du code prépare des listes vides : <code>quandPret</code> (lancées une fois, quand la couche existe), <code>quandRafraichir</code> (après chaque changement), <code>quandSelection</code> (au clic sur une municipalité) et <code>filtres</code> (pour estomper). Chaque étape y inscrit ses propres fonctions avec <code>.push()</code>.</li><li><b>Une fiche par municipalité.</b> La fonction <code>preparer()</code> lit les propriétés du GeoJSON et crée une fiche <code>m</code> : nom, code, MRC (déduite des deux premiers chiffres du code), quintiles matériel (<code>m.qm</code>) et social (<code>m.qs</code>), centre géométrique (<code>m.centre</code>).</li><li><b><code>demarrer()</code> reste toujours la dernière ligne.</b> Elle crée la couche, puis lance les rendez-vous. C'est pour cela qu'on colle tout le code des étapes suivantes <b>au-dessus</b> du repère D.</li></ul>
+<div class="encadre ok"><div class="encadre-tete">✅ Résultat attendu</div><ul><li>Les 89 municipalités s'affichent, colorées selon le quintile de défavorisation matérielle.</li><li>Au survol, le contour devient blanc et une info-bulle donne le nom, la MRC et les deux quintiles.</li><li>Le panneau de gauche affiche deux onglets, Analyse et Municipalité.</li></ul></div>
+<div class="encadre piege"><div class="encadre-tete">💡 Si ça ne fonctionne pas</div><ul><li>Carte vide et message « donnees is not defined » dans la console (F12) : le fichier <code>laurentides_defavorisation.js</code> n'est pas dans le même dossier, ou son nom est différent.</li></ul></div>
+<div class="liens"><a class="lien-etape" href="etape01.html" target="_blank" rel="noopener">▶ Voir le résultat de l'étape 1</a><span>Pour comparer votre code : ouvrez ce résultat, puis <kbd>Ctrl</kbd>+<kbd>U</kbd>.</span></div>
+</section>
+<section class="etape" id="etape-2"><div class="etape-num">2</div>
+<h2>Fonds de carte, sélecteur de couches et échelle</h2><p class="duree">Étape 2 sur 11 · environ 10 min</p>
+<p>Offrir un deuxième fond (l'orthoimagerie du gouvernement du Québec), la possibilité de n'afficher aucun fond, un sélecteur de couches et une échelle graphique.</p>
+<div class="notions"><span>Leaflet :</span><code>L.tileLayer()</code><code>L.layerGroup()</code><code>L.control.layers()</code><code>L.control.scale()</code></div>
+<h3>Ce que vous faites</h3><ol>
+<li>Collez le bloc <b>Repère A</b> (CSS) dans la balise &lt;style&gt;, au-dessus de la ligne <code>/* ▲ REPÈRE A … */</code>.</li>
+<li>Collez le bloc <b>Repère D</b> (JavaScript) dans le script, au-dessus de la ligne <code>// ▲ REPÈRE D …</code>.</li>
+<li>Enregistrez (<kbd>Ctrl</kbd>+<kbd>S</kbd>), puis actualisez la page dans le navigateur (<kbd>F5</kbd>).</li></ol>
+<div class="code"><div class="code-tete"><span>Repère A · CSS</span><button class="copier" type="button">Copier</button></div><pre><code><span class="cm">    /* --- Étape 2 : sélecteur de couches et échelle --- */</span>
+    .leaflet-control-layers { background: var(--panneau) !important; color: var(--texte) !important;
+                              border: 1px solid var(--ligne) !important; border-radius: 10px !important; }
+    .leaflet-control-layers-expanded { padding: 10px 12px !important; }
+    .leaflet-control-layers-separator { border-top-color: var(--ligne) !important; }
+    .leaflet-control-layers-toggle { filter: invert(1); }
+    .leaflet-control-scale-line { background: #070620bb; color: var(--texte2); border-color: var(--texte2); }</code></pre></div>
+<div class="code"><div class="code-tete"><span>Repère D · JavaScript</span><button class="copier" type="button">Copier</button></div><pre><code><span class="cm">  /* =================================================================</span>
+<span class="cm">     ÉTAPE 2 : fonds de carte, sélecteur de couches et échelle</span>
+     ================================================================= */
+<span class="cm">  // Deuxième fond : l&#x27;orthoimagerie du gouvernement du Québec (même format TMS, d&#x27;où le {-y})</span>
+  const fondOrtho = L.tileLayer(&#x27;https://geoegl.msp.gouv.qc.ca/carto/tms/1.0.0/orthos@EPSG_3857/{z}/{x}/{-y}.png&#x27;, {
+    attribution: ATTRIBUTION + &#x27; (orthoimagerie)&#x27;,
+    maxZoom: 18
+  });
+  const fondVide = L.layerGroup();   // « Aucun fond » : un simple groupe vide
+
+<span class="cm">  // Le sélecteur de couches : créé quand la couche des municipalités existe (rendez-vous quandPret)</span>
+  let controleCouches;
+  quandPret.push(function () {
+    controleCouches = L.control.layers(
+      { &#x27;Carte du gouvernement du Québec&#x27;: fondReseau, &#x27;Orthoimagerie du Québec&#x27;: fondOrtho, &#x27;Aucun fond&#x27;: fondVide },  // fonds : un seul à la fois
+      { &#x27;Municipalités (choroplèthe)&#x27;: couche },                                                                       // couches : cases à cocher
+      { collapsed: window.innerWidth &lt;= 800 }                                                                          // replié sur téléphone
+    ).addTo(carte);
+  });
+
+<span class="cm">  // L&#x27;échelle graphique, en kilomètres seulement</span>
+  L.control.scale({ imperial: false }).addTo(carte);</code></pre></div>
+<h3>Comprendre le code</h3><ul class="comprendre"><li><b>Fonds et couches.</b> <code>L.control.layers()</code> reçoit deux listes : les <b>fonds</b>, affichés en boutons radio (un seul à la fois), et les <b>couches superposées</b>, affichées en cases à cocher.</li><li><b>Pourquoi <code>quandPret</code>?</b> La couche des municipalités n'existe qu'une fois <code>demarrer()</code> lancée. On crée donc le sélecteur dans le rendez-vous <code>quandPret</code>. Les étapes 8 et 9 y ajouteront d'autres couches avec <code>controleCouches.addOverlay()</code>.</li></ul>
+<div class="encadre ok"><div class="encadre-tete">✅ Résultat attendu</div><ul><li>Un sélecteur apparaît en haut à droite : Carte du gouvernement du Québec, Orthoimagerie du Québec, Aucun fond, et la case Municipalités (choroplèthe).</li><li>Une échelle en kilomètres apparaît en bas à gauche.</li></ul></div>
+<div class="encadre piege"><div class="encadre-tete">💡 Si ça ne fonctionne pas</div><ul><li>« controleCouches is undefined » : le bloc a été collé sous la ligne <code>demarrer();</code> au lieu d'au-dessus du repère D.</li></ul></div>
+<div class="liens"><a class="lien-etape" href="etape02.html" target="_blank" rel="noopener">▶ Voir le résultat de l'étape 2</a><span>Pour comparer votre code : ouvrez ce résultat, puis <kbd>Ctrl</kbd>+<kbd>U</kbd>.</span></div>
+</section>
+<section class="etape" id="etape-3"><div class="etape-num">3</div>
+<h2>Le profil de la municipalité cliquée</h2><p class="duree">Étape 3 sur 11 · environ 20 min</p>
+<p>Au clic sur une municipalité, l'entourer d'un contour blanc et afficher son profil dans l'onglet Municipalité : ses deux quintiles, la comparaison avec sa MRC et la région, et les municipalités voisines (centres à moins de 15 km).</p>
+<div class="notions"><span>Leaflet :</span><code>createPane()</code><code>L.geoJSON(feature)</code><code>flyToBounds()</code><code>distance()</code></div>
+<h3>Ce que vous faites</h3><ol>
+<li>Collez le bloc <b>Repère A</b> (CSS) dans la balise &lt;style&gt;, au-dessus de la ligne <code>/* ▲ REPÈRE A … */</code>.</li>
+<li>Collez le bloc <b>Repère D</b> (JavaScript) dans le script, au-dessus de la ligne <code>// ▲ REPÈRE D …</code>.</li>
+<li>Enregistrez (<kbd>Ctrl</kbd>+<kbd>S</kbd>), puis actualisez la page dans le navigateur (<kbd>F5</kbd>).</li></ol>
+<div class="code"><div class="code-tete"><span>Repère A · CSS</span><button class="copier" type="button">Copier</button></div><pre><code><span class="cm">    /* --- Étape 3 : profil de la municipalité --- */</span>
+    .nom-muni { font-size: 1.45rem; font-weight: 700; line-height: 1.15; }
+    .sous-titre { font-size: .82rem; color: var(--discret); margin: 3px 0 12px; }
+    .heros { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .heros &gt; div { background: var(--panneau2); border: 1px solid var(--ligne); border-radius: 14px; padding: 12px 14px; }
+    .heros small { display: block; font-size: .76rem; color: var(--texte2); }
+    .heros strong { font-family: &quot;JetBrains Mono&quot;, monospace; font-size: 2.2rem; font-weight: 500; }
+    .heros .interp { font-size: .76rem; color: var(--discret); line-height: 1.35; min-height: 2em; }
+    .jauge { display: grid; grid-template-columns: repeat(5, 1fr); gap: 3px; margin-top: 6px; }
+    .jauge span { height: 8px; border-radius: 3px; background: var(--ligne2); }
+    table.comparaison { width: 100%; border-collapse: collapse; font-size: .82rem; }
+    table.comparaison th { font-size: .72rem; color: var(--discret); text-align: right; font-weight: 600; padding: 4px 2px; }
+    table.comparaison td { padding: 5px 2px; border-bottom: 1px solid var(--ligne2); color: var(--texte2); }
+    table.comparaison td.n { text-align: right; font-family: &quot;JetBrains Mono&quot;, monospace; color: var(--texte); }
+    .pastilles { display: flex; flex-wrap: wrap; gap: 5px; }
+    .pastille-lien { display: inline-flex; align-items: center; gap: 6px; font-size: .78rem; padding: 3px 9px; color: var(--texte2);
+                     border-radius: 999px; background: var(--panneau2); border: 1px solid var(--ligne); cursor: pointer; }
+    .pastille-lien:hover { border-color: var(--teal); color: var(--texte); }
+    .pastille-lien i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+    .badge-double { display: inline-block; font-size: .72rem; font-weight: 700; padding: 2px 9px; border-radius: 999px;
+                    background: #d730271f; color: #ff8f7f; border: 1px solid #d7302755; margin-left: 6px; }</code></pre></div>
+<div class="code"><div class="code-tete"><span>Repère D · JavaScript</span><button class="copier" type="button">Copier</button></div><pre><code><span class="cm">  /* =================================================================</span>
+<span class="cm">     ÉTAPE 3 : profil de la municipalité cliquée</span>
+     ================================================================= */
+<span class="cm">  // Un « volet » (pane) au-dessus des polygones, pour le contour de sélection</span>
+  carte.createPane(&#x27;surbrillance&#x27;);
+  carte.getPane(&#x27;surbrillance&#x27;).style.zIndex = 450;            // les polygones sont à 400
+  carte.getPane(&#x27;surbrillance&#x27;).style.pointerEvents = &#x27;none&#x27;;   // le volet ne bloque pas les clics
+  let contourSelection = null;
+
+  const INTERPRETATION = {
+    1: &#x27;20 % les moins défavorisées&#x27;, 2: &#x27;sous la médiane régionale&#x27;, 3: &#x27;autour de la médiane&#x27;,
+    4: &#x27;au-dessus de la médiane&#x27;, 5: &#x27;20 % les plus défavorisées&#x27;
+  };
+  function moyenne(valeurs) {
+    const v = valeurs.filter(function (x) { return x !== null; });
+    return v.length ? v.reduce(function (a, b) { return a + b; }, 0) / v.length : null;
+  } // fin moyenne()
+  function trouverParCode(code) {
+    return municipalites.find(function (x) { return x.code === code; });
+  } // fin trouverParCode()
+  function carteQuintile(titre, q) {
+    let segments = &#x27;&#x27;;
+    for (let i = 1; i &lt;= 5; i++) {
+      segments += &#x27;&lt;span style=&quot;&#x27; + (q &amp;&amp; i &lt;= q ? &#x27;background:&#x27; + QCOL[i] : &#x27;&#x27;) + &#x27;&quot;&gt;&lt;/span&gt;&#x27;;
+    }
+    return &#x27;&lt;div&gt;&lt;small&gt;&#x27; + titre + &#x27;&lt;/small&gt;&#x27; +
+           &#x27;&lt;strong style=&quot;color:&#x27; + (q ? QCOL[q] : GRIS) + &#x27;&quot;&gt;&#x27; + (q ? &#x27;Q&#x27; + q : &#x27;n.d.&#x27;) + &#x27;&lt;/strong&gt;&#x27; +
+           &#x27;&lt;div class=&quot;interp&quot;&gt;&#x27; + (q ? INTERPRETATION[q] : &#x27;Donnée non disponible&#x27;) + &#x27;&lt;/div&gt;&#x27; +
+           &#x27;&lt;div class=&quot;jauge&quot;&gt;&#x27; + segments + &#x27;&lt;/div&gt;&lt;/div&gt;&#x27;;
+  } // fin carteQuintile()
+
+  function afficherProfil(m) {
+    const memeMrc = municipalites.filter(function (x) { return x.mrc === m.mrc; });
+<span class="cm">    // carte.distance() donne la distance en mètres entre deux points</span>
+    const proches = municipalites
+      .filter(function (x) { return x !== m &amp;&amp; carte.distance(m.centre, x.centre) &lt;= 15000; })
+      .sort(function (a, b) { return carte.distance(m.centre, a.centre) - carte.distance(m.centre, b.centre); });
+    function ligne(titre, mat, soc) {
+      return &#x27;&lt;tr&gt;&lt;td&gt;&#x27; + titre + &#x27;&lt;/td&gt;&lt;td class=&quot;n&quot;&gt;&#x27; + fmt(mat, 1) + &#x27;&lt;/td&gt;&lt;td class=&quot;n&quot;&gt;&#x27; + fmt(soc, 1) + &#x27;&lt;/td&gt;&lt;/tr&gt;&#x27;;
+    }
+    document.getElementById(&#x27;muni-vide&#x27;).style.display = &#x27;none&#x27;;
+    document.getElementById(&#x27;muni-profil&#x27;).innerHTML =
+      &#x27;&lt;div class=&quot;surtitre&quot;&gt;Municipalité&lt;/div&gt;&#x27; +
+      &#x27;&lt;div class=&quot;nom-muni&quot;&gt;&#x27; + esc(m.nom) + &#x27;&lt;/div&gt;&#x27; +
+      &#x27;&lt;div class=&quot;sous-titre&quot;&gt;MRC &#x27; + esc(m.mrc) + &#x27; · &lt;span class=&quot;mono&quot;&gt;&#x27; + esc(m.code) + &#x27;&lt;/span&gt;&#x27; +
+        (m.qm &gt;= 4 &amp;&amp; m.qs &gt;= 4 ? &#x27;&lt;span class=&quot;badge-double&quot;&gt;Double défavorisation&lt;/span&gt;&#x27; : &#x27;&#x27;) + &#x27;&lt;/div&gt;&#x27; +
+      &#x27;&lt;div class=&quot;heros&quot;&gt;&#x27; + carteQuintile(&#x27;Matérielle&#x27;, m.qm) + carteQuintile(&#x27;Sociale&#x27;, m.qs) + &#x27;&lt;/div&gt;&#x27; +
+      &#x27;&lt;div class=&quot;surtitre&quot;&gt;Comparaison (quintile moyen)&lt;/div&gt;&#x27; +
+      &#x27;&lt;table class=&quot;comparaison&quot;&gt;&lt;tr&gt;&lt;th&gt;&lt;/th&gt;&lt;th&gt;Matérielle&lt;/th&gt;&lt;th&gt;Sociale&lt;/th&gt;&lt;/tr&gt;&#x27; +
+        ligne(esc(m.nom), m.qm, m.qs) +
+        ligne(&#x27;MRC &#x27; + esc(m.mrc), moyenne(memeMrc.map(function (x) { return x.qm; })), moyenne(memeMrc.map(function (x) { return x.qs; }))) +
+        ligne(&#x27;Région&#x27;, moyenne(municipalites.map(function (x) { return x.qm; })), moyenne(municipalites.map(function (x) { return x.qs; }))) +
+      &#x27;&lt;/table&gt;&#x27; +
+      &#x27;&lt;div class=&quot;surtitre&quot;&gt;À moins de 15 km (&#x27; + proches.length + &#x27;)&lt;/div&gt;&#x27; +
+      &#x27;&lt;div class=&quot;pastilles&quot;&gt;&#x27; + proches.map(function (x) {
+        return &#x27;&lt;span class=&quot;pastille-lien&quot; data-code=&quot;&#x27; + esc(x.code) + &#x27;&quot;&gt;&lt;i style=&quot;background:&#x27; + (couleurDe(x) || GRIS) + &#x27;&quot;&gt;&lt;/i&gt;&#x27; + esc(x.nom) + &#x27;&lt;/span&gt;&#x27;;
+      }).join(&#x27;&#x27;) + &#x27;&lt;/div&gt;&#x27; +
+      &#x27;&lt;p class=&quot;indice&quot; style=&quot;margin-top:14px&quot;&gt;Q1 = moins défavorisé, Q5 = plus défavorisé. Moyennes indicatives, non pondérées par la population.&lt;/p&gt;&#x27;;
+<span class="cm">    // Un clic sur une municipalité proche la sélectionne à son tour</span>
+    document.querySelectorAll(&#x27;#muni-profil .pastille-lien&#x27;).forEach(function (p) {
+      p.onclick = function () { selectionner(trouverParCode(p.dataset.code), true); };
+    });
+  } // fin afficherProfil()
+
+<span class="cm">  // Rendez-vous « quandSelection » : contour blanc, zoom animé, profil</span>
+  quandSelection.push(function (m, voler) {
+    if (contourSelection) carte.removeLayer(contourSelection);
+    contourSelection = L.geoJSON(m.feature, {
+      pane: &#x27;surbrillance&#x27;,
+      interactive: false,
+      style: { color: &#x27;#ffffff&#x27;, weight: 3.5, fill: false, opacity: 1 }
+    }).addTo(carte);
+    if (voler) carte.flyToBounds(m.layer.getBounds(), { padding: [40, 40], maxZoom: 11, duration: 1 });
+    afficherProfil(m);
+    ouvrirOnglet(&#x27;muni&#x27;);
+  });
+<span class="cm">  // Rendez-vous « quandRafraichir » : le profil suit les changements (couleurs des pastilles)</span>
+  quandRafraichir.push(function () {
+    if (etat.selection) afficherProfil(etat.selection);
+  });</code></pre></div>
+<h3>Comprendre le code</h3><ul class="comprendre"><li><b>Les volets (panes).</b> Leaflet empile les éléments de la carte en couches numérotées : les polygones sont à 400. Le volet <code>surbrillance</code>, à 450, garde le contour de sélection au-dessus de tous les polygones, même quand on en survole un autre.</li><li><b><code>carte.distance(a, b)</code></b> renvoie la distance en mètres entre deux points. On l'utilise pour trouver les municipalités dont le centre est à moins de 15 000 m.</li><li><b><code>flyToBounds()</code></b> anime le déplacement vers l'emprise d'un polygone. Il n'est utilisé que si on clique une municipalité dans une liste (paramètre <code>voler</code>), pas sur la carte elle-même.</li></ul>
+<div class="encadre ok"><div class="encadre-tete">✅ Résultat attendu</div><ul><li>Un clic sur une municipalité ouvre l'onglet Municipalité, avec deux grandes cartes Q1 à Q5 et leurs jauges.</li><li>Le tableau compare les quintiles de la municipalité avec la moyenne de sa MRC et de la région.</li><li>Un clic sur une municipalité voisine déplace la carte jusqu'à elle et affiche son profil.</li></ul></div>
+<div class="encadre piege"><div class="encadre-tete">💡 Si ça ne fonctionne pas</div><ul><li>Le clic ne fait rien : ouvrez la console (F12). Une erreur rouge indique souvent un bloc collé à moitié ou une accolade manquante.</li></ul></div>
+<div class="liens"><a class="lien-etape" href="etape03.html" target="_blank" rel="noopener">▶ Voir le résultat de l'étape 3</a><span>Pour comparer votre code : ouvrez ce résultat, puis <kbd>Ctrl</kbd>+<kbd>U</kbd>.</span></div>
+</section>
+<section class="etape" id="etape-4"><div class="etape-num">4</div>
+<h2>Le choix de l'indicateur et une légende interactive</h2><p class="duree">Étape 4 sur 11 · environ 20 min</p>
+<p>Choisir l'indicateur affiché (matérielle ou sociale) et ajouter une légende sur mesure : un clic sur une classe l'estompe, et un curseur règle l'opacité.</p>
+<div class="notions"><span>Leaflet :</span><code>L.Control.extend()</code><code>L.DomUtil.create()</code><code>L.DomEvent.disableClickPropagation()</code><code>setStyle()</code></div>
+<h3>Ce que vous faites</h3><ol>
+<li>Collez le bloc <b>Repère A</b> (CSS) dans la balise &lt;style&gt;, au-dessus de la ligne <code>/* ▲ REPÈRE A … */</code>.</li>
+<li>Collez le bloc <b>Repère B</b> (HTML) dans l'en-tête, au-dessus de la ligne <code>&lt;!-- ▲ REPÈRE B … --&gt;</code>.</li>
+<li>Collez le bloc <b>Repère D</b> (JavaScript) dans le script, au-dessus de la ligne <code>// ▲ REPÈRE D …</code>.</li>
+<li>Enregistrez (<kbd>Ctrl</kbd>+<kbd>S</kbd>), puis actualisez la page dans le navigateur (<kbd>F5</kbd>).</li></ol>
+<div class="code"><div class="code-tete"><span>Repère A · CSS</span><button class="copier" type="button">Copier</button></div><pre><code><span class="cm">    /* --- Étape 4 : légende interactive --- */</span>
+    .legende { background: var(--panneau); border: 1px solid var(--ligne); border-radius: 12px;
+               padding: 11px 14px; color: var(--texte2); min-width: 210px; }
+    .legende-titre { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px;
+                     color: var(--discret); cursor: pointer; display: flex; justify-content: space-between; gap: 10px; }
+    .legende.repliee .legende-corps { display: none; }
+    .legende-item { display: flex; align-items: center; gap: 8px; margin-top: 5px; font-size: .8rem; cursor: pointer; user-select: none; }
+    .legende-item.masque { opacity: .35; text-decoration: line-through; }
+    .legende-item span { width: 15px; height: 15px; border-radius: 4px; border: 1px solid #ffffff44; }
+    .legende-note { font-size: .7rem; color: var(--discret); margin-top: 7px; }
+    .legende label { display: flex; align-items: center; gap: 8px; font-size: .72rem; color: var(--discret); margin-top: 8px; }
+    .legende input { flex: 1; accent-color: var(--teal); }</code></pre></div>
+<div class="code"><div class="code-tete"><span>Repère B · HTML</span><button class="copier" type="button">Copier</button></div><pre><code>      &lt;select id=&quot;choix-indicateur&quot; title=&quot;Indicateur affiché&quot;&gt;
+        &lt;option value=&quot;mat&quot;&gt;Défavorisation matérielle&lt;/option&gt;
+        &lt;option value=&quot;soc&quot;&gt;Défavorisation sociale&lt;/option&gt;
+      &lt;/select&gt;</code></pre></div>
+<div class="code"><div class="code-tete"><span>Repère D · JavaScript</span><button class="copier" type="button">Copier</button></div><pre><code><span class="cm">  /* =================================================================</span>
+<span class="cm">     ÉTAPE 4 : choix de l&#x27;indicateur et légende interactive</span>
+     ================================================================= */
+  const NOMS_INDICATEURS = { mat: &#x27;Défavorisation matérielle&#x27;, soc: &#x27;Défavorisation sociale&#x27; };
+  etat.masques = {};   // classes masquées dans la légende, par exemple { &#x27;5&#x27;: true }
+
+  function quintileAffiche(m) { return etat.indicateur === &#x27;soc&#x27; ? m.qs : m.qm; }
+
+<span class="cm">  // La couleur dépend maintenant de l&#x27;indicateur choisi (on remplace la fonction de l&#x27;étape 1)</span>
+  couleurDe = function (m) {
+    const q = quintileAffiche(m);
+    return q ? QCOL[q] : null;
+  };
+<span class="cm">  // La « clé » de légende d&#x27;une municipalité : &#x27;1&#x27; à &#x27;5&#x27;, ou &#x27;na&#x27; si la donnée manque</span>
+  let cleLegende = function (m) {
+    const q = quintileAffiche(m);
+    return q ? String(q) : &#x27;na&#x27;;
+  };
+  filtres.push(function (m) { return !etat.masques[cleLegende(m)]; });
+
+<span class="cm">  // Le contenu de la légende (enrichi à l&#x27;étape 7 pour le mode croisé)</span>
+  let contenuLegende = function () {
+    const libelles = { 1: &#x27;Q1 · moins défavorisé&#x27;, 2: &#x27;Q2&#x27;, 3: &#x27;Q3&#x27;, 4: &#x27;Q4&#x27;, 5: &#x27;Q5 · plus défavorisé&#x27; };
+    let html = &#x27;&#x27;;
+    for (let q = 1; q &lt;= 5; q++) {
+      html += &#x27;&lt;div class=&quot;legende-item&#x27; + (etat.masques[q] ? &#x27; masque&#x27; : &#x27;&#x27;) + &#x27;&quot; data-cle=&quot;&#x27; + q + &#x27;&quot;&gt;&#x27; +
+              &#x27;&lt;span style=&quot;background:&#x27; + QCOL[q] + &#x27;&quot;&gt;&lt;/span&gt;&#x27; + libelles[q] + &#x27;&lt;/div&gt;&#x27;;
+    }
+    return html;
+  };
+
+<span class="cm">  // Un contrôle Leaflet sur mesure : L.Control.extend</span>
+  const Legende = L.Control.extend({
+    options: { position: &#x27;bottomleft&#x27; },
+    onAdd: function () {
+      this._div = L.DomUtil.create(&#x27;div&#x27;, &#x27;legende&#x27;);
+      L.DomEvent.disableClickPropagation(this._div);    // un clic dans la légende ne touche pas la carte
+      L.DomEvent.disableScrollPropagation(this._div);
+      if (window.innerWidth &lt;= 800) this._div.classList.add(&#x27;repliee&#x27;);   // repliée sur téléphone
+      return this._div;
+    },
+    maj: function () {
+      const div = this._div;
+      div.innerHTML =
+        &#x27;&lt;div class=&quot;legende-titre&quot;&gt;&lt;span&gt;&#x27; + NOMS_INDICATEURS[etat.indicateur] + &#x27;&lt;/span&gt;&lt;span&gt;▾&lt;/span&gt;&lt;/div&gt;&#x27; +
+        &#x27;&lt;div class=&quot;legende-corps&quot;&gt;&#x27; + contenuLegende() +
+          &#x27;&lt;div class=&quot;legende-item&#x27; + (etat.masques.na ? &#x27; masque&#x27; : &#x27;&#x27;) + &#x27;&quot; data-cle=&quot;na&quot;&gt;&#x27; +
+            &#x27;&lt;span style=&quot;background:repeating-linear-gradient(45deg,transparent 0 2px,#8b8fc466 2px 4px)&quot;&gt;&lt;/span&gt;Donnée non disponible&lt;/div&gt;&#x27; +
+          &#x27;&lt;div class=&quot;legende-note&quot;&gt;Cliquez sur une classe pour la masquer.&lt;/div&gt;&#x27; +
+          &#x27;&lt;label&gt;Opacité &lt;input type=&quot;range&quot; min=&quot;0.2&quot; max=&quot;1&quot; step=&quot;0.05&quot; value=&quot;&#x27; + etat.opacite + &#x27;&quot;&gt;&lt;/label&gt;&#x27; +
+        &#x27;&lt;/div&gt;&#x27;;
+      div.querySelector(&#x27;.legende-titre&#x27;).onclick = function () { div.classList.toggle(&#x27;repliee&#x27;); };
+      div.querySelectorAll(&#x27;[data-cle]&#x27;).forEach(function (item) {
+        item.onclick = function () {
+          const cle = item.dataset.cle;
+          etat.masques[cle] = !etat.masques[cle];
+          rafraichir();
+        };
+      });
+      div.querySelector(&#x27;input&#x27;).oninput = function () {
+        etat.opacite = Number(this.value);
+        couche.setStyle(styleMunicipalite);   // pas besoin de tout rafraîchir
+      };
+    } // fin maj
+  }); // fin L.Control.extend
+  const legende = new Legende().addTo(carte);
+  quandRafraichir.push(function () { legende.maj(); });
+
+<span class="cm">  // Changer d&#x27;indicateur : on vide les classes masquées et on rafraîchit</span>
+  document.getElementById(&#x27;choix-indicateur&#x27;).onchange = function () {
+    etat.indicateur = this.value;
+    etat.masques = {};
+    rafraichir();
+  };</code></pre></div>
+<h3>Comprendre le code</h3><ul class="comprendre"><li><b>Un contrôle sur mesure.</b> <code>L.Control.extend()</code> crée un nouveau type de contrôle. Sa fonction <code>onAdd()</code> fabrique la boîte de la légende, et Leaflet la place dans le coin demandé (<code>bottomleft</code>).</li><li><b><code>disableClickPropagation()</code></b> empêche un clic dans la légende de « traverser » jusqu'à la carte.</li><li><b>Remplacer une fonction.</b> À l'étape 1, <code>couleurDe</code> ne regardait que le quintile matériel. Comme elle a été déclarée avec <code>let</code>, on peut la remplacer : elle suit maintenant l'indicateur choisi. <code>styleMunicipalite()</code> appelle automatiquement la nouvelle version.</li><li><b>Masquer une classe</b> ajoute un filtre : les municipalités de cette classe échouent au filtre et sont estompées.</li></ul>
+<div class="encadre ok"><div class="encadre-tete">✅ Résultat attendu</div><ul><li>Une liste déroulante « Défavorisation matérielle / sociale » apparaît dans l'en-tête.</li><li>La légende, en bas à gauche, change de titre et de couleurs selon l'indicateur.</li><li>Un clic sur Q5 estompe les municipalités en Q5 et barre la ligne. Le curseur règle l'opacité.</li></ul></div>
+<div class="encadre piege"><div class="encadre-tete">💡 Si ça ne fonctionne pas</div><ul><li>« Cannot set properties of null (setting 'onchange') » : le bloc HTML du repère B n'a pas été collé, donc la liste <code>choix-indicateur</code> n'existe pas.</li></ul></div>
+<div class="liens"><a class="lien-etape" href="etape04.html" target="_blank" rel="noopener">▶ Voir le résultat de l'étape 4</a><span>Pour comparer votre code : ouvrez ce résultat, puis <kbd>Ctrl</kbd>+<kbd>U</kbd>.</span></div>
+</section>
+<section class="etape" id="etape-5"><div class="etape-num">5</div>
+<h2>Le filtre par MRC et la recherche</h2><p class="duree">Étape 5 sur 11 · environ 15 min</p>
+<p>Filtrer la carte par MRC (les autres municipalités sont estompées et la carte zoome sur la MRC) et rechercher une municipalité par son nom, avec ou sans accents.</p>
+<div class="notions"><span>Leaflet :</span><code>L.featureGroup().getBounds()</code><code>flyToBounds()</code></div>
+<h3>Ce que vous faites</h3><ol>
+<li>Collez le bloc <b>Repère B</b> (HTML) dans l'en-tête, au-dessus de la ligne <code>&lt;!-- ▲ REPÈRE B … --&gt;</code>.</li>
+<li>Collez le bloc <b>Repère D</b> (JavaScript) dans le script, au-dessus de la ligne <code>// ▲ REPÈRE D …</code>.</li>
+<li>Enregistrez (<kbd>Ctrl</kbd>+<kbd>S</kbd>), puis actualisez la page dans le navigateur (<kbd>F5</kbd>).</li></ol>
+<div class="code"><div class="code-tete"><span>Repère B · HTML</span><button class="copier" type="button">Copier</button></div><pre><code>      &lt;select id=&quot;choix-mrc&quot; title=&quot;Filtrer par MRC&quot;&gt;&lt;option value=&quot;&quot;&gt;Toutes les MRC&lt;/option&gt;&lt;/select&gt;
+      &lt;input id=&quot;recherche&quot; list=&quot;liste-municipalites&quot; placeholder=&quot;Municipalité…&quot; autocomplete=&quot;off&quot;&gt;
+      &lt;datalist id=&quot;liste-municipalites&quot;&gt;&lt;/datalist&gt;</code></pre></div>
+<div class="code"><div class="code-tete"><span>Repère D · JavaScript</span><button class="copier" type="button">Copier</button></div><pre><code><span class="cm">  /* =================================================================</span>
+<span class="cm">     ÉTAPE 5 : filtre par MRC et recherche d&#x27;une municipalité</span>
+     ================================================================= */
+  filtres.push(function (m) { return !etat.mrc || m.mrc === etat.mrc; });
+
+  quandPret.push(function () {
+<span class="cm">    // Remplir la liste des MRC à partir des données</span>
+    const noms = [...new Set(municipalites.map(function (m) { return m.mrc; }))]
+      .sort(function (a, b) { return a.localeCompare(b, &#x27;fr&#x27;); });
+    noms.forEach(function (nom) { document.getElementById(&#x27;choix-mrc&#x27;).add(new Option(nom, nom)); });
+<span class="cm">    // Remplir les suggestions de la recherche</span>
+    document.getElementById(&#x27;liste-municipalites&#x27;).innerHTML =
+      municipalites.map(function (m) { return &#x27;&lt;option value=&quot;&#x27; + esc(m.nom) + &#x27;&quot;&gt;&#x27;; }).join(&#x27;&#x27;);
+  });
+
+  function choisirMrc(nom) {
+    etat.mrc = nom;
+    document.getElementById(&#x27;choix-mrc&#x27;).value = nom;
+    rafraichir();
+    const polygones = municipalites
+      .filter(function (m) { return !nom || m.mrc === nom; })
+      .map(function (m) { return m.layer; });
+<span class="cm">    // L.featureGroup() regroupe des couches pour obtenir leur emprise commune</span>
+    carte.flyToBounds(L.featureGroup(polygones).getBounds(), { padding: [30, 30], duration: 0.9 });
+  } // fin choisirMrc()
+  document.getElementById(&#x27;choix-mrc&#x27;).onchange = function () { choisirMrc(this.value); };
+
+  function sansAccents(texte) {
+    return texte.normalize(&#x27;NFD&#x27;).replace(/[̀-ͯ]/g, &#x27;&#x27;).toLowerCase().trim();
+  } // fin sansAccents()
+  function rechercher() {
+    const saisie = sansAccents(document.getElementById(&#x27;recherche&#x27;).value);
+    if (!saisie) return;
+    const trouvee = municipalites.find(function (m) { return sansAccents(m.nom) === saisie; }) ||
+                    municipalites.find(function (m) { return sansAccents(m.nom).indexOf(saisie) &gt;= 0; });
+    if (trouvee) { selectionner(trouvee, true); }
+    else { message(&#x27;Aucune municipalité ne correspond à cette recherche.&#x27;); }
+  } // fin rechercher()
+  document.getElementById(&#x27;recherche&#x27;).addEventListener(&#x27;change&#x27;, rechercher);</code></pre></div>
+<h3>Comprendre le code</h3><ul class="comprendre"><li><b>L'emprise d'un groupe.</b> <code>L.featureGroup(polygones).getBounds()</code> calcule le rectangle qui contient tous les polygones d'une MRC. <code>flyToBounds()</code> s'y rend en animation.</li><li><b>Les listes se remplissent seules</b> à partir des données (rendez-vous <code>quandPret</code>) : aucune MRC n'est écrite à la main dans le HTML.</li><li><b>La recherche</b> compare les noms sans accents ni majuscules : « agathe » trouve Sainte-Agathe-des-Monts. Si plusieurs noms contiennent le texte, la première correspondance l'emporte. Elle appelle <code>selectionner(m, true)</code> : le profil de l'étape 3 s'ouvre, avec vol animé.</li></ul>
+<div class="encadre ok"><div class="encadre-tete">✅ Résultat attendu</div><ul><li>Choisir « Antoine-Labelle » estompe les autres MRC et zoome sur Antoine-Labelle. « Toutes les MRC » revient à la région.</li><li>Taper « mont-tremblant » (ou le choisir dans les suggestions) puis Entrée sélectionne Mont-Tremblant : la carte s'y rend et son profil s'ouvre.</li></ul></div>
+<div class="encadre piege"><div class="encadre-tete">💡 Si ça ne fonctionne pas</div><ul><li>La recherche ne réagit pas : appuyez sur Entrée ou cliquez ailleurs. L'événement <code>change</code> se déclenche quand on quitte le champ.</li></ul></div>
+<div class="liens"><a class="lien-etape" href="etape05.html" target="_blank" rel="noopener">▶ Voir le résultat de l'étape 5</a><span>Pour comparer votre code : ouvrez ce résultat, puis <kbd>Ctrl</kbd>+<kbd>U</kbd>.</span></div>
+</section>
+<section class="etape" id="etape-6"><div class="etape-num">6</div>
+<h2>Le tableau de bord de l'onglet Analyse</h2><p class="duree">Étape 6 sur 11 · environ 20 min</p>
+<p>Résumer la portée choisie (région ou MRC) : quatre indicateurs, la répartition par quintile en barres cliquables, et un tableau des MRC triable.</p>
+<div class="notions"><span>Leaflet :</span><code>quandRafraichir</code><code>Les données de chaque couche</code></div>
+<h3>Ce que vous faites</h3><ol>
+<li>Collez le bloc <b>Repère A</b> (CSS) dans la balise &lt;style&gt;, au-dessus de la ligne <code>/* ▲ REPÈRE A … */</code>.</li>
+<li>Collez le bloc <b>Repère C</b> (HTML) dans l'onglet Analyse, au-dessus de la ligne <code>&lt;!-- ▲ REPÈRE C … --&gt;</code>.</li>
+<li>Collez le bloc <b>Repère D</b> (JavaScript) dans le script, au-dessus de la ligne <code>// ▲ REPÈRE D …</code>.</li>
+<li>Enregistrez (<kbd>Ctrl</kbd>+<kbd>S</kbd>), puis actualisez la page dans le navigateur (<kbd>F5</kbd>).</li></ol>
+<div class="code"><div class="code-tete"><span>Repère A · CSS</span><button class="copier" type="button">Copier</button></div><pre><code><span class="cm">    /* --- Étape 6 : tableau de bord --- */</span>
+    .indicateurs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .indicateur { background: var(--panneau2); border: 1px solid var(--ligne); border-radius: 12px; padding: 10px 12px; }
+    .indicateur b { display: block; font-family: &quot;JetBrains Mono&quot;, monospace; font-size: 1.5rem; font-weight: 500; }
+    .indicateur span { font-size: .74rem; color: var(--discret); line-height: 1.3; }
+    .barre { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; cursor: pointer; }
+    .barre.masque { opacity: .35; }
+    .barre .lib { width: 96px; font-size: .78rem; color: var(--texte2); }
+    .barre .fond { flex: 1; height: 9px; background: var(--ligne2); border-radius: 5px; overflow: hidden; }
+    .barre .plein { height: 100%; border-radius: 5px; transition: width .4s; }
+    .barre .val { width: 84px; text-align: right; font-size: .74rem; font-family: &quot;JetBrains Mono&quot;, monospace; white-space: nowrap; }
+    table.tableau-mrc { width: 100%; border-collapse: collapse; font-size: .8rem; }
+    table.tableau-mrc th { color: var(--discret); font-size: .74rem; font-weight: 600; text-align: left; padding: 5px 4px;
+                           border-bottom: 1px solid var(--ligne); cursor: pointer; white-space: nowrap; }
+    table.tableau-mrc td { padding: 6px 4px; border-bottom: 1px solid var(--ligne2); color: var(--texte2); cursor: pointer; }
+    table.tableau-mrc .n { text-align: right; font-family: &quot;JetBrains Mono&quot;, monospace; }
+    table.tableau-mrc tr:hover td { color: var(--texte); background: #ffffff08; }
+    table.tableau-mrc tr.choisie td { color: var(--teal); }</code></pre></div>
+<div class="code"><div class="code-tete"><span>Repère C · HTML</span><button class="copier" type="button">Copier</button></div><pre><code>        &lt;div class=&quot;indicateurs&quot;&gt;
+          &lt;div class=&quot;indicateur&quot;&gt;&lt;b id=&quot;kpi-n&quot;&gt;0&lt;/b&gt;&lt;span&gt;municipalités dans le filtre&lt;/span&gt;&lt;/div&gt;
+          &lt;div class=&quot;indicateur&quot;&gt;&lt;b id=&quot;kpi-q45&quot; style=&quot;color:#fc8d59&quot;&gt;0&lt;/b&gt;&lt;span id=&quot;kpi-q45-texte&quot;&gt;en Q4 ou Q5&lt;/span&gt;&lt;/div&gt;
+          &lt;div class=&quot;indicateur&quot;&gt;&lt;b id=&quot;kpi-double&quot; style=&quot;color:#d73027&quot;&gt;0&lt;/b&gt;&lt;span&gt;double défavorisation (matérielle et sociale en Q4 ou Q5)&lt;/span&gt;&lt;/div&gt;
+          &lt;div class=&quot;indicateur&quot;&gt;&lt;b id=&quot;kpi-na&quot; style=&quot;color:var(--discret)&quot;&gt;0&lt;/b&gt;&lt;span&gt;sans donnée&lt;/span&gt;&lt;/div&gt;
+        &lt;/div&gt;
+        &lt;div class=&quot;surtitre&quot; id=&quot;titre-repartition&quot;&gt;Répartition par quintile&lt;/div&gt;
+        &lt;p class=&quot;indice&quot;&gt;Cliquez sur une barre pour masquer ou afficher ce quintile sur la carte.&lt;/p&gt;
+        &lt;div id=&quot;repartition&quot;&gt;&lt;/div&gt;
+        &lt;div class=&quot;surtitre&quot;&gt;Portrait par MRC&lt;/div&gt;
+        &lt;p class=&quot;indice&quot;&gt;Cliquez sur une MRC pour la filtrer. Cliquez sur un en-tête pour trier.&lt;/p&gt;
+        &lt;table class=&quot;tableau-mrc&quot; id=&quot;tableau-mrc&quot;&gt;&lt;/table&gt;</code></pre></div>
+<div class="code"><div class="code-tete"><span>Repère D · JavaScript</span><button class="copier" type="button">Copier</button></div><pre><code><span class="cm">  /* =================================================================</span>
+<span class="cm">     ÉTAPE 6 : tableau de bord (indicateurs, répartition, MRC)</span>
+     ================================================================= */
+  let triMrc = { cle: &#x27;part&#x27;, sens: -1 };   // tri du tableau : colonne et sens (-1 = décroissant)
+
+  function dansLaPortee() {                  // les municipalités du filtre MRC en cours
+    return municipalites.filter(function (m) { return !etat.mrc || m.mrc === etat.mrc; });
+  } // fin dansLaPortee()
+  function quintileAnalyse(m) { return etat.indicateur === &#x27;soc&#x27; ? m.qs : m.qm; }   // en mode croisé : la matérielle
+  function pourcentage(a, b) { return b ? fmt(100 * a / b) + &#x27; %&#x27; : &#x27;n.d.&#x27;; }
+
+  function majTableauDeBord() {
+    const portee = dansLaPortee();
+    const dimension = etat.indicateur === &#x27;soc&#x27; ? &#x27;sociale&#x27; : &#x27;matérielle&#x27;;
+    const avecDonnee = portee.filter(function (m) { return quintileAnalyse(m); });
+    const q45 = avecDonnee.filter(function (m) { return quintileAnalyse(m) &gt;= 4; }).length;
+
+<span class="cm">    // 1. Les quatre indicateurs</span>
+    document.getElementById(&#x27;intro-analyse&#x27;).innerHTML = &#x27;Portée : &lt;b&gt;&#x27; + (etat.mrc ? &#x27;MRC &#x27; + esc(etat.mrc) : &#x27;région des Laurentides&#x27;) + &#x27;&lt;/b&gt;&#x27;;
+    document.getElementById(&#x27;kpi-n&#x27;).textContent = portee.length;
+    document.getElementById(&#x27;kpi-q45&#x27;).textContent = q45;
+    document.getElementById(&#x27;kpi-q45-texte&#x27;).textContent = &#x27;en Q4 ou Q5 (&#x27; + dimension + &#x27;), soit &#x27; + pourcentage(q45, avecDonnee.length);
+    document.getElementById(&#x27;kpi-double&#x27;).textContent = portee.filter(function (m) { return m.qm &gt;= 4 &amp;&amp; m.qs &gt;= 4; }).length;
+    document.getElementById(&#x27;kpi-na&#x27;).textContent = portee.length - avecDonnee.length;
+
+<span class="cm">    // 2. La répartition par quintile (barres cliquables)</span>
+    document.getElementById(&#x27;titre-repartition&#x27;).textContent = &#x27;Répartition par quintile (&#x27; + dimension + &#x27;)&#x27;;
+    const compte = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+    avecDonnee.forEach(function (m) { compte[quintileAnalyse(m)]++; });
+    const maximum = Math.max(1, compte[1], compte[2], compte[3], compte[4], compte[5]);
+    let html = &#x27;&#x27;;
+    for (let q = 1; q &lt;= 5; q++) {
+      html += &#x27;&lt;div class=&quot;barre&#x27; + (etat.masques[q] ? &#x27; masque&#x27; : &#x27;&#x27;) + &#x27;&quot; data-q=&quot;&#x27; + q + &#x27;&quot;&gt;&#x27; +
+              &#x27;&lt;span class=&quot;lib&quot;&gt;Q&#x27; + q + (q === 1 ? &#x27; moins déf.&#x27; : q === 5 ? &#x27; plus déf.&#x27; : &#x27;&#x27;) + &#x27;&lt;/span&gt;&#x27; +
+              &#x27;&lt;div class=&quot;fond&quot;&gt;&lt;div class=&quot;plein&quot; style=&quot;width:&#x27; + (100 * compte[q] / maximum) + &#x27;%;background:&#x27; + QCOL[q] + &#x27;&quot;&gt;&lt;/div&gt;&lt;/div&gt;&#x27; +
+              &#x27;&lt;span class=&quot;val&quot;&gt;&#x27; + compte[q] + &#x27; · &#x27; + pourcentage(compte[q], portee.length) + &#x27;&lt;/span&gt;&lt;/div&gt;&#x27;;
+    }
+    const repartition = document.getElementById(&#x27;repartition&#x27;);
+    repartition.innerHTML = html;
+    repartition.querySelectorAll(&#x27;.barre&#x27;).forEach(function (b) {
+      b.onclick = function () {
+        if (etat.indicateur === &#x27;bi&#x27;) { message(&#x27;En mode croisé, utilisez la légende ou la matrice.&#x27;); return; }
+        etat.masques[b.dataset.q] = !etat.masques[b.dataset.q];
+        rafraichir();
+      };
+    });
+
+<span class="cm">    // 3. Le tableau par MRC (toujours sur toute la région)</span>
+    const groupes = {};
+    municipalites.forEach(function (m) {
+      const g = groupes[m.mrc] = groupes[m.mrc] || { mrc: m.mrc, n: 0, quintiles: [], q45: 0 };
+      g.n++;
+      const q = quintileAnalyse(m);
+      if (q) { g.quintiles.push(q); if (q &gt;= 4) g.q45++; }
+    });
+    const lignes = Object.values(groupes).map(function (g) {
+      g.moyenne = moyenne(g.quintiles) || 0;
+      g.part = g.quintiles.length ? g.q45 / g.quintiles.length : 0;
+      return g;
+    });
+    lignes.sort(function (a, b) {
+      const va = a[triMrc.cle], vb = b[triMrc.cle];
+      return (typeof va === &#x27;string&#x27; ? va.localeCompare(vb, &#x27;fr&#x27;) : va - vb) * triMrc.sens;
+    });
+    function entete(cle, titre, numerique) {
+      return &#x27;&lt;th data-cle=&quot;&#x27; + cle + &#x27;&quot;&#x27; + (numerique ? &#x27; class=&quot;n&quot;&#x27; : &#x27;&#x27;) + &#x27;&gt;&#x27; + titre +
+             (triMrc.cle === cle ? (triMrc.sens &gt; 0 ? &#x27; ▲&#x27; : &#x27; ▼&#x27;) : &#x27;&#x27;) + &#x27;&lt;/th&gt;&#x27;;
+    }
+    const tableau = document.getElementById(&#x27;tableau-mrc&#x27;);
+    tableau.innerHTML = &#x27;&lt;tr&gt;&#x27; + entete(&#x27;mrc&#x27;, &#x27;MRC&#x27;) + entete(&#x27;n&#x27;, &#x27;Mun.&#x27;, true) + entete(&#x27;moyenne&#x27;, &#x27;Q moyen&#x27;, true) + entete(&#x27;part&#x27;, &#x27;% Q4-Q5&#x27;, true) + &#x27;&lt;/tr&gt;&#x27; +
+      lignes.map(function (g) {
+        return &#x27;&lt;tr data-mrc=&quot;&#x27; + esc(g.mrc) + &#x27;&quot;&#x27; + (g.mrc === etat.mrc ? &#x27; class=&quot;choisie&quot;&#x27; : &#x27;&#x27;) + &#x27;&gt;&lt;td&gt;&#x27; + esc(g.mrc) + &#x27;&lt;/td&gt;&#x27; +
+               &#x27;&lt;td class=&quot;n&quot;&gt;&#x27; + g.n + &#x27;&lt;/td&gt;&lt;td class=&quot;n&quot;&gt;&#x27; + fmt(g.moyenne, 1) + &#x27;&lt;/td&gt;&lt;td class=&quot;n&quot;&gt;&#x27; + fmt(100 * g.part) + &#x27;&lt;/td&gt;&lt;/tr&gt;&#x27;;
+      }).join(&#x27;&#x27;);
+    tableau.querySelectorAll(&#x27;th&#x27;).forEach(function (th) {
+      th.onclick = function () {
+        const cle = th.dataset.cle;
+        triMrc = { cle: cle, sens: triMrc.cle === cle ? -triMrc.sens : (cle === &#x27;mrc&#x27; ? 1 : -1) };
+        majTableauDeBord();
+      };
+    });
+    tableau.querySelectorAll(&#x27;tr[data-mrc]&#x27;).forEach(function (tr) {
+      tr.onclick = function () { choisirMrc(tr.dataset.mrc === etat.mrc ? &#x27;&#x27; : tr.dataset.mrc); };
+    });
+  } // fin majTableauDeBord()
+  quandRafraichir.push(majTableauDeBord);</code></pre></div>
+<h3>Comprendre le code</h3><ul class="comprendre"><li><b>Une étape sans nouvelle fonction Leaflet.</b> Tout le calcul se fait sur les fiches <code>municipalites</code>. C'est la force d'une carte web : la même donnée alimente la carte et l'analyse.</li><li><b>Toujours à jour.</b> <code>majTableauDeBord()</code> est inscrite au rendez-vous <code>quandRafraichir</code> : elle se relance quand on change d'indicateur, de MRC ou de classes masquées.</li><li><b>Le quintile moyen</b> est une moyenne simple de rangs, non pondérée par la population : il sert à comparer, pas à mesurer.</li></ul>
+<div class="encadre ok"><div class="encadre-tete">✅ Résultat attendu</div><ul><li>Avec toute la région : 89 municipalités, et environ 18 municipalités (20 %) par quintile.</li><li>Un clic sur une barre masque ce quintile sur la carte et dans la légende.</li><li>Un clic sur un en-tête trie le tableau; un clic sur une MRC la filtre (un second clic revient à la région).</li></ul></div>
+<div class="encadre piege"><div class="encadre-tete">💡 Si ça ne fonctionne pas</div><ul><li>« moyenne is not defined » : l'étape 3 n'a pas été faite. Les étapes se suivent : chacune utilise des fonctions des précédentes.</li></ul></div>
+<div class="liens"><a class="lien-etape" href="etape06.html" target="_blank" rel="noopener">▶ Voir le résultat de l'étape 6</a><span>Pour comparer votre code : ouvrez ce résultat, puis <kbd>Ctrl</kbd>+<kbd>U</kbd>.</span></div>
+</section>
+<section class="etape" id="etape-7"><div class="etape-num">7</div>
+<h2>La matrice croisée et le mode « matérielle × sociale »</h2><p class="duree">Étape 7 sur 11 · environ 25 min</p>
+<p>Croiser les deux dimensions : une matrice 5 × 5 compte les municipalités par combinaison de quintiles, et un clic sur une case les met en surbrillance. Un troisième indicateur colore la carte selon une grille bivariée de 3 × 3 couleurs.</p>
+<div class="notions"><span>Leaflet :</span><code>L.latLngBounds()</code><code>bounds.pad()</code><code>Set</code></div>
+<h3>Ce que vous faites</h3><ol>
+<li>Collez le bloc <b>Repère A</b> (CSS) dans la balise &lt;style&gt;, au-dessus de la ligne <code>/* ▲ REPÈRE A … */</code>.</li>
+<li>Collez le bloc <b>Repère C</b> (HTML) dans l'onglet Analyse, au-dessus de la ligne <code>&lt;!-- ▲ REPÈRE C … --&gt;</code>.</li>
+<li>Collez le bloc <b>Repère D</b> (JavaScript) dans le script, au-dessus de la ligne <code>// ▲ REPÈRE D …</code>.</li>
+<li>Enregistrez (<kbd>Ctrl</kbd>+<kbd>S</kbd>), puis actualisez la page dans le navigateur (<kbd>F5</kbd>).</li></ol>
+<div class="code"><div class="code-tete"><span>Repère A · CSS</span><button class="copier" type="button">Copier</button></div><pre><code><span class="cm">    /* --- Étape 7 : matrice croisée, surbrillance, mode croisé --- */</span>
+    .matrice { display: grid; grid-template-columns: 44px repeat(5, 1fr); gap: 3px; font-size: .72rem; }
+    .matrice .t { color: var(--discret); text-align: center; align-self: center; font-weight: 600; }
+    .matrice .case { aspect-ratio: 1.35; border-radius: 5px; display: grid; place-items: center; cursor: pointer;
+                     font-family: &quot;JetBrains Mono&quot;, monospace; border: 1px solid var(--ligne2); }
+    .matrice .case:hover { border-color: var(--teal); }
+    .matrice .case.choisie { outline: 2px solid #fff; outline-offset: 1px; }
+    .axe { display: flex; justify-content: space-between; font-size: .72rem; color: var(--discret); margin: 5px 0 0 47px; }
+    .avis { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin: 8px 0;
+            background: #21aead14; border: 1px solid #21aead40; border-radius: 10px; padding: 7px 11px; font-size: .8rem; }
+    .avis button { background: none; border: 1px solid var(--ligne); color: var(--texte2); border-radius: 7px; padding: 3px 9px; cursor: pointer; }
+    .grille-bivariee { display: grid; grid-template-columns: repeat(3, 22px); gap: 2px; margin: 8px 0 4px; }
+    .grille-bivariee span { width: 22px; height: 22px; border-radius: 3px; cursor: pointer; }
+    .axes-bivaries { font-size: .68rem; color: var(--discret); line-height: 1.4; }</code></pre></div>
+<div class="code"><div class="code-tete"><span>Repère C · HTML</span><button class="copier" type="button">Copier</button></div><pre><code>        &lt;div class=&quot;surtitre&quot;&gt;Matérielle × sociale&lt;/div&gt;
+        &lt;p class=&quot;indice&quot;&gt;Nombre de municipalités par combinaison de quintiles. Cliquez sur une case pour les repérer sur la carte.&lt;/p&gt;
+        &lt;div id=&quot;avis-surbrillance&quot;&gt;&lt;/div&gt;
+        &lt;div class=&quot;matrice&quot; id=&quot;matrice&quot;&gt;&lt;/div&gt;
+        &lt;div class=&quot;axe&quot;&gt;&lt;span&gt;Sociale Q1&lt;/span&gt;&lt;span&gt;Sociale Q5 →&lt;/span&gt;&lt;/div&gt;
+        &lt;div class=&quot;pastilles&quot; id=&quot;liste-matrice&quot; style=&quot;margin-top:10px&quot;&gt;&lt;/div&gt;</code></pre></div>
+<div class="code"><div class="code-tete"><span>Repère D · JavaScript</span><button class="copier" type="button">Copier</button></div><pre><code><span class="cm">  /* =================================================================</span>
+<span class="cm">     ÉTAPE 7 : matrice croisée, surbrillance et mode « matérielle × sociale »</span>
+     ================================================================= */
+  etat.surbrillance = null;      // ensemble (Set) de municipalités mises en évidence, ou null
+  etat.titreSurbrillance = &#x27;&#x27;;
+  etat.cleSurbrillance = &#x27;&#x27;;
+  filtres.push(function (m) { return !etat.surbrillance || etat.surbrillance.has(m); });
+
+  function surligner(liste, titre, cle, voler) {
+    etat.surbrillance = new Set(liste);
+    etat.titreSurbrillance = titre;
+    etat.cleSurbrillance = cle;
+    rafraichir();
+    if (voler &amp;&amp; liste.length) {
+      const zone = L.latLngBounds(liste.map(function (m) { return m.centre; }));
+      carte.flyToBounds(zone.pad(0.3), { padding: [30, 30], maxZoom: 11, duration: 0.9 });
+    }
+  } // fin surligner()
+  function effacerSurbrillance() {
+    etat.surbrillance = null;
+    etat.titreSurbrillance = &#x27;&#x27;;
+    etat.cleSurbrillance = &#x27;&#x27;;
+    rafraichir();
+  } // fin effacerSurbrillance()
+
+  function majMatrice() {
+    const portee = dansLaPortee();
+    const compte = {};
+    let maximum = 1;
+    portee.forEach(function (m) {
+      if (m.qm &amp;&amp; m.qs) {
+        const k = m.qm + &#x27;-&#x27; + m.qs;
+        compte[k] = (compte[k] || 0) + 1;
+        maximum = Math.max(maximum, compte[k]);
+      }
+    });
+    let html = &#x27;&lt;div class=&quot;t&quot;&gt;Mat. ↓&lt;/div&gt;&#x27;;
+    for (let s = 1; s &lt;= 5; s++) html += &#x27;&lt;div class=&quot;t&quot;&gt;Q&#x27; + s + &#x27;&lt;/div&gt;&#x27;;
+    for (let q = 5; q &gt;= 1; q--) {
+      html += &#x27;&lt;div class=&quot;t&quot;&gt;Q&#x27; + q + &#x27;&lt;/div&gt;&#x27;;
+      for (let s = 1; s &lt;= 5; s++) {
+        const k = q + &#x27;-&#x27; + s, n = compte[k] || 0;
+        const intensite = n ? 0.18 + 0.72 * n / maximum : 0;   // plus la case compte de municipalités, plus elle est vive
+        html += &#x27;&lt;div class=&quot;case&#x27; + (etat.cleSurbrillance === k ? &#x27; choisie&#x27; : &#x27;&#x27;) + &#x27;&quot; data-k=&quot;&#x27; + k + &#x27;&quot; &#x27; +
+                &#x27;title=&quot;Matérielle Q&#x27; + q + &#x27;, sociale Q&#x27; + s + &#x27;&quot; style=&quot;background:rgba(33,174,173,&#x27; + intensite.toFixed(2) + &#x27;)&quot;&gt;&#x27; + n + &#x27;&lt;/div&gt;&#x27;;
+      }
+    }
+    const matrice = document.getElementById(&#x27;matrice&#x27;);
+    matrice.innerHTML = html;
+    matrice.querySelectorAll(&#x27;.case&#x27;).forEach(function (c) {
+      c.onclick = function () {
+        if (etat.cleSurbrillance === c.dataset.k) { effacerSurbrillance(); return; }
+        const qs = c.dataset.k.split(&#x27;-&#x27;).map(Number);
+        const liste = portee.filter(function (m) { return m.qm === qs[0] &amp;&amp; m.qs === qs[1]; });
+        surligner(liste, &#x27;Matérielle Q&#x27; + qs[0] + &#x27; × sociale Q&#x27; + qs[1], c.dataset.k, true);
+      };
+    });
+
+<span class="cm">    // L&#x27;avis de surbrillance et la liste des municipalités de la case choisie</span>
+    const avis = document.getElementById(&#x27;avis-surbrillance&#x27;);
+    avis.innerHTML = etat.surbrillance
+      ? &#x27;&lt;div class=&quot;avis&quot;&gt;&lt;span&gt;Surbrillance : &lt;b&gt;&#x27; + esc(etat.titreSurbrillance) + &#x27;&lt;/b&gt; (&#x27; + etat.surbrillance.size + &#x27;)&lt;/span&gt;&lt;button&gt;Effacer&lt;/button&gt;&lt;/div&gt;&#x27;
+      : &#x27;&#x27;;
+    if (etat.surbrillance) avis.querySelector(&#x27;button&#x27;).onclick = effacerSurbrillance;
+    const listeMatrice = document.getElementById(&#x27;liste-matrice&#x27;);
+    listeMatrice.innerHTML = etat.surbrillance &amp;&amp; etat.cleSurbrillance !== &#x27;rayon&#x27;
+      ? [...etat.surbrillance].map(function (m) {
+          return &#x27;&lt;span class=&quot;pastille-lien&quot; data-code=&quot;&#x27; + esc(m.code) + &#x27;&quot;&gt;&lt;i style=&quot;background:&#x27; + (couleurDe(m) || GRIS) + &#x27;&quot;&gt;&lt;/i&gt;&#x27; + esc(m.nom) + &#x27;&lt;/span&gt;&#x27;;
+        }).join(&#x27;&#x27;)
+      : &#x27;&#x27;;
+    listeMatrice.querySelectorAll(&#x27;.pastille-lien&#x27;).forEach(function (p) {
+      p.onclick = function () { selectionner(trouverParCode(p.dataset.code), true); };
+    });
+  } // fin majMatrice()
+  quandRafraichir.push(majMatrice);
+
+<span class="cm">  // --- Le mode croisé : une grille de 3 × 3 couleurs (charte de la DSP) ---</span>
+  const BIVARIEE = [                      // ligne : matérielle (faible, moyen, élevé) ; colonne : sociale
+    [&#x27;#cdd6f0&#x27;, &#x27;#8fb4e6&#x27;, &#x27;#0482D3&#x27;],
+    [&#x27;#7fcfc9&#x27;, &#x27;#5aa5c2&#x27;, &#x27;#1a5fb4&#x27;],
+    [&#x27;#21AEAD&#x27;, &#x27;#1786a8&#x27;, &#x27;#140C74&#x27;]
+  ];
+  const NIVEAUX = [&#x27;faible&#x27;, &#x27;moyen&#x27;, &#x27;élevé&#x27;];
+  function niveau(q) { return q === null ? null : (q &lt;= 2 ? 0 : q === 3 ? 1 : 2); }   // Q1-Q2, Q3, Q4-Q5
+
+  NOMS_INDICATEURS.bi = &#x27;Matérielle × sociale&#x27;;
+  document.getElementById(&#x27;choix-indicateur&#x27;).add(new Option(&#x27;Matérielle × sociale&#x27;, &#x27;bi&#x27;));
+
+<span class="cm">  // On « enveloppe » les fonctions de l&#x27;étape 4 : même résultat, sauf en mode croisé</span>
+  const couleurSimple = couleurDe;
+  couleurDe = function (m) {
+    if (etat.indicateur !== &#x27;bi&#x27;) return couleurSimple(m);
+    const a = niveau(m.qm), b = niveau(m.qs);
+    return (a === null || b === null) ? null : BIVARIEE[a][b];
+  };
+  const cleSimple = cleLegende;
+  cleLegende = function (m) {
+    if (etat.indicateur !== &#x27;bi&#x27;) return cleSimple(m);
+    const a = niveau(m.qm), b = niveau(m.qs);
+    return (a === null || b === null) ? &#x27;na&#x27; : a + &#x27;-&#x27; + b;
+  };
+  const legendeSimple = contenuLegende;
+  contenuLegende = function () {
+    if (etat.indicateur !== &#x27;bi&#x27;) return legendeSimple();
+    let html = &#x27;&lt;div class=&quot;grille-bivariee&quot;&gt;&#x27;;
+    for (let a = 2; a &gt;= 0; a--) {
+      for (let b = 0; b &lt; 3; b++) {
+        html += &#x27;&lt;span data-cle=&quot;&#x27; + a + &#x27;-&#x27; + b + &#x27;&quot; title=&quot;Matérielle &#x27; + NIVEAUX[a] + &#x27;, sociale &#x27; + NIVEAUX[b] + &#x27;&quot; &#x27; +
+                &#x27;style=&quot;background:&#x27; + BIVARIEE[a][b] + (etat.masques[a + &#x27;-&#x27; + b] ? &#x27;;opacity:.2&#x27; : &#x27;&#x27;) + &#x27;&quot;&gt;&lt;/span&gt;&#x27;;
+      }
+    }
+    return html + &#x27;&lt;/div&gt;&lt;div class=&quot;axes-bivaries&quot;&gt;↑ matérielle · sociale →&lt;br&gt;faible Q1-Q2 · moyen Q3 · élevé Q4-Q5&lt;/div&gt;&#x27;;
+  };</code></pre></div>
+<h3>Comprendre le code</h3><ul class="comprendre"><li><b>La surbrillance</b> est un filtre de plus : seules les municipalités de l'ensemble <code>etat.surbrillance</code> restent vives. L'analyse de proximité (étape 8) réutilisera la même mécanique.</li><li><b>Envelopper une fonction.</b> On garde l'ancienne version (<code>const couleurSimple = couleurDe</code>) et on la remplace par une nouvelle qui ne change le résultat qu'en mode croisé. Même chose pour la clé et le contenu de la légende. Cette technique permet d'ajouter un mode sans toucher au code de l'étape 4.</li><li><b>La grille bivariée</b> regroupe chaque dimension en trois niveaux : faible (Q1-Q2), moyen (Q3), élevé (Q4-Q5). Le coin marine foncé correspond à la double défavorisation.</li></ul>
+<div class="encadre ok"><div class="encadre-tete">✅ Résultat attendu</div><ul><li>La matrice affiche le nombre de municipalités pour chaque combinaison. Un clic sur une case estompe les autres, zoome, et liste les municipalités (cliquables).</li><li>L'indicateur « Matérielle × sociale » apparaît dans la liste. La légende devient une grille de 3 × 3 couleurs, dont chaque case est masquable.</li></ul></div>
+<div class="encadre piege"><div class="encadre-tete">💡 Si ça ne fonctionne pas</div><ul><li>La matrice reste vide : vérifiez que le bloc C a bien été collé dans l'onglet Analyse (élément <code>id="matrice"</code>).</li></ul></div>
+<div class="liens"><a class="lien-etape" href="etape07.html" target="_blank" rel="noopener">▶ Voir le résultat de l'étape 7</a><span>Pour comparer votre code : ouvrez ce résultat, puis <kbd>Ctrl</kbd>+<kbd>U</kbd>.</span></div>
+</section>
+<section class="etape" id="etape-8"><div class="etape-num">8</div>
+<h2>L'analyse de proximité</h2><p class="duree">Étape 8 sur 11 · environ 20 min</p>
+<p>Choisir un point (bouton ou clic droit) et analyser les municipalités dont le centre se trouve dans un rayon réglable de 5 à 60 km : nombre, quintiles moyens, double défavorisation et distances.</p>
+<div class="notions"><span>Leaflet :</span><code>L.circle()</code><code>L.circleMarker()</code><code>distance()</code><code>L.popup()</code><code>on(&#x27;click&#x27;)</code><code>on(&#x27;contextmenu&#x27;)</code></div>
+<h3>Ce que vous faites</h3><ol>
+<li>Collez le bloc <b>Repère A</b> (CSS) dans la balise &lt;style&gt;, au-dessus de la ligne <code>/* ▲ REPÈRE A … */</code>.</li>
+<li>Collez le bloc <b>Repère C</b> (HTML) dans l'onglet Analyse, au-dessus de la ligne <code>&lt;!-- ▲ REPÈRE C … --&gt;</code>.</li>
+<li>Collez le bloc <b>Repère D</b> (JavaScript) dans le script, au-dessus de la ligne <code>// ▲ REPÈRE D …</code>.</li>
+<li>Enregistrez (<kbd>Ctrl</kbd>+<kbd>S</kbd>), puis actualisez la page dans le navigateur (<kbd>F5</kbd>).</li></ol>
+<div class="code"><div class="code-tete"><span>Repère A · CSS</span><button class="copier" type="button">Copier</button></div><pre><code><span class="cm">    /* --- Étape 8 : analyse de proximité --- */</span>
+    .boite-rayon { background: var(--panneau2); border: 1px solid var(--ligne); border-radius: 12px; padding: 12px; }
+    .ligne-rayon { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+    .ligne-rayon input { flex: 1; accent-color: var(--teal); }
+    #resultat-rayon { margin-top: 10px; font-size: .82rem; color: var(--texte2); line-height: 1.5; }
+    #resultat-rayon .pastilles { margin-top: 8px; }
+    .viseur, .viseur .leaflet-interactive { cursor: crosshair !important; }
+    .leaflet-popup-content-wrapper, .leaflet-popup-tip { background: var(--panneau); color: var(--texte); border: 1px solid var(--ligne); }
+    .leaflet-popup-content button { margin-top: 8px; width: 100%; }</code></pre></div>
+<div class="code"><div class="code-tete"><span>Repère C · HTML</span><button class="copier" type="button">Copier</button></div><pre><code>        &lt;div class=&quot;surtitre&quot;&gt;Analyse de proximité&lt;/div&gt;
+        &lt;div class=&quot;boite-rayon&quot;&gt;
+          &lt;p class=&quot;indice&quot;&gt;Choisissez un point sur la carte (ou faites un clic droit) pour trouver les municipalités dont le centre est à moins de :&lt;/p&gt;
+          &lt;div class=&quot;ligne-rayon&quot;&gt;
+            &lt;input type=&quot;range&quot; id=&quot;rayon&quot; min=&quot;5&quot; max=&quot;60&quot; step=&quot;5&quot; value=&quot;20&quot;&gt;
+            &lt;span class=&quot;mono&quot; id=&quot;rayon-valeur&quot;&gt;20 km&lt;/span&gt;
+          &lt;/div&gt;
+          &lt;div class=&quot;ligne-rayon&quot;&gt;
+            &lt;button class=&quot;bouton&quot; id=&quot;bouton-point&quot;&gt;◎ Choisir un point&lt;/button&gt;
+            &lt;button class=&quot;bouton&quot; id=&quot;bouton-effacer-rayon&quot;&gt;Effacer&lt;/button&gt;
+          &lt;/div&gt;
+          &lt;div id=&quot;resultat-rayon&quot;&gt;&lt;/div&gt;
+        &lt;/div&gt;</code></pre></div>
+<div class="code"><div class="code-tete"><span>Repère D · JavaScript</span><button class="copier" type="button">Copier</button></div><pre><code><span class="cm">  /* =================================================================</span>
+<span class="cm">     ÉTAPE 8 : analyse de proximité (rayon autour d&#x27;un point)</span>
+     ================================================================= */
+  carte.createPane(&#x27;analyse&#x27;);                               // un 2e volet, sous le contour de sélection
+  carte.getPane(&#x27;analyse&#x27;).style.zIndex = 440;
+  carte.getPane(&#x27;analyse&#x27;).style.pointerEvents = &#x27;none&#x27;;
+  const groupeRayon = L.layerGroup().addTo(carte);
+  quandPret.push(function () { controleCouches.addOverlay(groupeRayon, &quot;Rayon d&#x27;analyse&quot;); });
+
+  let modePoint = false;       // vrai quand on attend un clic pour placer le rayon
+  let centreRayon = null;
+
+  function basculerModePoint() {
+    modePoint = !modePoint;
+    document.getElementById(&#x27;bouton-point&#x27;).classList.toggle(&#x27;actif&#x27;, modePoint);
+    carte.getContainer().classList.toggle(&#x27;viseur&#x27;, modePoint);
+    if (modePoint) message(&#x27;Cliquez sur la carte pour placer le centre du rayon.&#x27;);
+  } // fin basculerModePoint()
+
+  function placerRayon(point, sansZoom) {
+    if (modePoint) basculerModePoint();
+    centreRayon = point;
+    const metres = Number(document.getElementById(&#x27;rayon&#x27;).value) * 1000;
+    groupeRayon.clearLayers();
+    const cercle = L.circle(point, {
+      radius: metres, pane: &#x27;analyse&#x27;,
+      color: &#x27;#21AEAD&#x27;, weight: 2, dashArray: &#x27;6 5&#x27;, fillColor: &#x27;#21AEAD&#x27;, fillOpacity: 0.08
+    }).addTo(groupeRayon);
+    L.circleMarker(point, { pane: &#x27;analyse&#x27;, radius: 5, color: &#x27;#fff&#x27;, weight: 2, fillColor: &#x27;#21AEAD&#x27;, fillOpacity: 1 }).addTo(groupeRayon);
+
+<span class="cm">    // Les municipalités dont le centre est dans le rayon, de la plus proche à la plus éloignée</span>
+    const dedans = municipalites
+      .filter(function (m) { return carte.distance(point, m.centre) &lt;= metres; })
+      .sort(function (a, b) { return carte.distance(point, a.centre) - carte.distance(point, b.centre); });
+
+    document.getElementById(&#x27;resultat-rayon&#x27;).innerHTML =
+      &#x27;&lt;b class=&quot;mono&quot; style=&quot;color:var(--teal)&quot;&gt;&#x27; + dedans.length + &#x27;&lt;/b&gt; municipalités à moins de &#x27; + fmt(metres / 1000) + &#x27; km · &#x27; +
+      &#x27;quintile moyen &lt;span class=&quot;mono&quot;&gt;&#x27; + fmt(moyenne(dedans.map(function (m) { return m.qm; })), 1) + &#x27;&lt;/span&gt; (matérielle), &#x27; +
+      &#x27;&lt;span class=&quot;mono&quot;&gt;&#x27; + fmt(moyenne(dedans.map(function (m) { return m.qs; })), 1) + &#x27;&lt;/span&gt; (sociale) · &#x27; +
+      dedans.filter(function (m) { return m.qm &gt;= 4 &amp;&amp; m.qs &gt;= 4; }).length + &#x27; en double défavorisation&#x27; +
+      &#x27;&lt;div class=&quot;pastilles&quot;&gt;&#x27; + dedans.map(function (m) {
+        return &#x27;&lt;span class=&quot;pastille-lien&quot; data-code=&quot;&#x27; + esc(m.code) + &#x27;&quot;&gt;&lt;i style=&quot;background:&#x27; + (couleurDe(m) || GRIS) + &#x27;&quot;&gt;&lt;/i&gt;&#x27; +
+               esc(m.nom) + &#x27; &lt;span class=&quot;mono&quot; style=&quot;color:var(--discret)&quot;&gt;&#x27; + fmt(carte.distance(point, m.centre) / 1000) + &#x27; km&lt;/span&gt;&lt;/span&gt;&#x27;;
+      }).join(&#x27;&#x27;) + &#x27;&lt;/div&gt;&#x27;;
+    document.querySelectorAll(&#x27;#resultat-rayon .pastille-lien&#x27;).forEach(function (p) {
+      p.onclick = function () { selectionner(trouverParCode(p.dataset.code), true); };
+    });
+
+    surligner(dedans, &#x27;rayon de &#x27; + fmt(metres / 1000) + &#x27; km&#x27;, &#x27;rayon&#x27;, false);   // fonction de l&#x27;étape 7
+    if (!sansZoom) {
+      carte.flyToBounds(cercle.getBounds(), { padding: [30, 30], duration: 0.8 });
+      ouvrirOnglet(&#x27;analyse&#x27;);
+    }
+  } // fin placerRayon()
+
+  function effacerRayon() {
+    groupeRayon.clearLayers();
+    centreRayon = null;
+    document.getElementById(&#x27;resultat-rayon&#x27;).innerHTML = &#x27;&#x27;;
+    if (etat.cleSurbrillance === &#x27;rayon&#x27;) effacerSurbrillance();
+  } // fin effacerRayon()
+
+<span class="cm">  // Le clic sur un polygone est « capté » quand le mode point est actif (voir preparer(), étape 1)</span>
+  interceptionClic = function (e) {
+    if (!modePoint) return false;
+    placerRayon(e.latlng);
+    return true;
+  };
+<span class="cm">  // Le clic sur la carte hors des polygones</span>
+  carte.on(&#x27;click&#x27;, function (e) { if (modePoint) placerRayon(e.latlng); });
+
+  document.getElementById(&#x27;bouton-point&#x27;).onclick = basculerModePoint;
+  document.getElementById(&#x27;bouton-effacer-rayon&#x27;).onclick = effacerRayon;
+  document.getElementById(&#x27;rayon&#x27;).oninput = function () {
+    document.getElementById(&#x27;rayon-valeur&#x27;).textContent = this.value + &#x27; km&#x27;;
+    if (centreRayon) placerRayon(centreRayon, true);   // le cercle suit le curseur
+  };
+
+<span class="cm">  // Menu au clic droit : une fenêtre (L.popup) qui contient un bouton</span>
+  function menuContextuel(e) {
+    const boite = L.DomUtil.create(&#x27;div&#x27;);
+    boite.innerHTML = &#x27;&lt;b&gt;Point choisi&lt;/b&gt;&lt;br&gt;&lt;span class=&quot;mono&quot;&gt;&#x27; + fmt(e.latlng.lat, 5) + &#x27;, &#x27; + fmt(e.latlng.lng, 5) + &#x27;&lt;/span&gt;&#x27; +
+                      &#x27;&lt;button class=&quot;bouton&quot;&gt;◎ Analyser un rayon ici&lt;/button&gt;&#x27;;
+    boite.querySelector(&#x27;button&#x27;).onclick = function () { carte.closePopup(); placerRayon(e.latlng); };
+    L.popup().setLatLng(e.latlng).setContent(boite).openOn(carte);
+  } // fin menuContextuel()
+  carte.on(&#x27;contextmenu&#x27;, menuContextuel);
+  quandPret.push(function () {
+    municipalites.forEach(function (m) { m.layer.on(&#x27;contextmenu&#x27;, menuContextuel); });
+  });</code></pre></div>
+<h3>Comprendre le code</h3><ul class="comprendre"><li><b>Capter un clic.</b> À l'étape 1, chaque polygone vérifiait <code>interceptionClic</code> avant de sélectionner la municipalité. On y branche maintenant une fonction : en mode « point », le clic place le rayon au lieu d'ouvrir un profil.</li><li><b><code>L.circle()</code> et <code>L.circleMarker()</code></b> se ressemblent, mais le premier a un rayon en <b>mètres</b> (il grossit avec le zoom) et le second un rayon en <b>pixels</b> (taille fixe à l'écran).</li><li><b>Le menu du clic droit</b> est une fenêtre <code>L.popup()</code> qui contient un vrai bouton. On construit son contenu avec <code>L.DomUtil.create()</code> pour pouvoir y attacher un événement.</li></ul>
+<div class="encadre ok"><div class="encadre-tete">✅ Résultat attendu</div><ul><li>Le bouton « Choisir un point », puis un clic sur la carte, trace un cercle pointillé et liste les municipalités, de la plus proche à la plus éloignée.</li><li>Le curseur redimensionne le cercle en direct. « Effacer » retire le cercle et la surbrillance.</li><li>Un clic droit n'importe où ouvre une fenêtre « Analyser un rayon ici ».</li></ul></div>
+<div class="encadre piege"><div class="encadre-tete">💡 Si ça ne fonctionne pas</div><ul><li>« surligner is not defined » : l'étape 7 manque.</li></ul></div>
+<div class="liens"><a class="lien-etape" href="etape08.html" target="_blank" rel="noopener">▶ Voir le résultat de l'étape 8</a><span>Pour comparer votre code : ouvrez ce résultat, puis <kbd>Ctrl</kbd>+<kbd>U</kbd>.</span></div>
+</section>
+<section class="etape" id="etape-9"><div class="etape-num">9</div>
+<h2>Contrôles personnalisés, géolocalisation, étiquettes et points</h2><p class="duree">Étape 9 sur 11 · environ 15 min</p>
+<p>Ajouter deux boutons (vue d'ensemble, me localiser), les coordonnées du pointeur en direct, les noms des municipalités à partir du zoom 9, et une couche de points pour la double défavorisation.</p>
+<div class="notions"><span>Leaflet :</span><code>L.Control.extend()</code><code>locate()</code><code>on(&#x27;mousemove&#x27;)</code><code>on(&#x27;zoomend&#x27;)</code><code>L.divIcon()</code><code>L.circleMarker()</code><code>addOverlay()</code></div>
+<h3>Ce que vous faites</h3><ol>
+<li>Collez le bloc <b>Repère A</b> (CSS) dans la balise &lt;style&gt;, au-dessus de la ligne <code>/* ▲ REPÈRE A … */</code>.</li>
+<li>Collez le bloc <b>Repère D</b> (JavaScript) dans le script, au-dessus de la ligne <code>// ▲ REPÈRE D …</code>.</li>
+<li>Enregistrez (<kbd>Ctrl</kbd>+<kbd>S</kbd>), puis actualisez la page dans le navigateur (<kbd>F5</kbd>).</li></ol>
+<div class="code"><div class="code-tete"><span>Repère A · CSS</span><button class="copier" type="button">Copier</button></div><pre><code><span class="cm">    /* --- Étape 9 : contrôles personnalisés, étiquettes, points --- */</span>
+    .boutons-carte a { font-size: 15px; }
+    .coordonnees { background: var(--panneau); border: 1px solid var(--ligne); border-radius: 8px; padding: 4px 9px;
+                   font-family: &quot;JetBrains Mono&quot;, monospace; font-size: .7rem; color: var(--texte2); min-width: 200px; text-align: center; }
+    .etiquette div { transform: translate(-50%, -50%); white-space: nowrap; font-size: 11px; font-weight: 700; color: #14143a;
+                     text-shadow: 0 0 3px #fff, 0 0 3px #fff, 0 0 2px #fff; pointer-events: none; }
+    .sans-etiquettes .etiquette { display: none; }
+    @media (max-width: 800px) { .coordonnees { display: none; } }</code></pre></div>
+<div class="code"><div class="code-tete"><span>Repère D · JavaScript</span><button class="copier" type="button">Copier</button></div><pre><code><span class="cm">  /* =================================================================</span>
+<span class="cm">     ÉTAPE 9 : contrôles personnalisés, géolocalisation, étiquettes et points</span>
+     ================================================================= */
+<span class="cm">  // Deux boutons sous le zoom : vue d&#x27;ensemble et « me localiser »</span>
+  const BoutonsCarte = L.Control.extend({
+    options: { position: &#x27;topleft&#x27; },
+    onAdd: function () {
+      const div = L.DomUtil.create(&#x27;div&#x27;, &#x27;leaflet-bar boutons-carte&#x27;);
+      div.innerHTML = &#x27;&lt;a href=&quot;#&quot; title=&quot;Vue d\&#x27;ensemble&quot; data-action=&quot;ensemble&quot;&gt;⌂&lt;/a&gt;&#x27; +
+                      &#x27;&lt;a href=&quot;#&quot; title=&quot;Me localiser&quot; data-action=&quot;localiser&quot;&gt;⌖&lt;/a&gt;&#x27;;
+      L.DomEvent.disableClickPropagation(div);
+      div.querySelectorAll(&#x27;a&#x27;).forEach(function (a) {
+        a.onclick = function (e) {
+          e.preventDefault();
+          if (a.dataset.action === &#x27;ensemble&#x27;) carte.flyToBounds(couche.getBounds(), { padding: [20, 20] });
+          else carte.locate({ setView: true, maxZoom: 11 });
+        };
+      });
+      return div;
+    }
+  });
+  new BoutonsCarte().addTo(carte);
+
+<span class="cm">  // Les coordonnées du pointeur, en direct (événement mousemove)</span>
+  const Coordonnees = L.Control.extend({
+    options: { position: &#x27;bottomright&#x27; },
+    onAdd: function () {
+      this._div = L.DomUtil.create(&#x27;div&#x27;, &#x27;coordonnees&#x27;);
+      this._div.textContent = &#x27;Survolez la carte&#x27;;
+      return this._div;
+    },
+    maj: function (point) {
+      this._div.textContent = fmt(point.lat, 4) + &#x27; N · &#x27; + fmt(Math.abs(point.lng), 4) + &#x27; O · zoom &#x27; + carte.getZoom();
+    }
+  });
+  const coordonnees = new Coordonnees().addTo(carte);
+  carte.on(&#x27;mousemove&#x27;, function (e) { coordonnees.maj(e.latlng); });
+
+<span class="cm">  // Géolocalisation : carte.locate() déclenche locationfound ou locationerror</span>
+  const groupePosition = L.layerGroup().addTo(carte);
+  carte.on(&#x27;locationfound&#x27;, function (e) {
+    groupePosition.clearLayers();
+    L.circle(e.latlng, { radius: e.accuracy, color: &#x27;#0482D3&#x27;, weight: 1, fillOpacity: 0.1 }).addTo(groupePosition);
+    L.circleMarker(e.latlng, { radius: 7, color: &#x27;#fff&#x27;, weight: 2, fillColor: &#x27;#0482D3&#x27;, fillOpacity: 1 }).addTo(groupePosition);
+    message(&#x27;Position trouvée (précision : &#x27; + fmt(e.accuracy) + &#x27; m).&#x27;);
+  });
+  carte.on(&#x27;locationerror&#x27;, function () {
+    message(&#x27;Position non disponible : autorisation refusée, ou page ouverte hors https.&#x27;);
+  });
+
+<span class="cm">  // Étiquettes des noms (L.divIcon) et points de double défavorisation (L.circleMarker)</span>
+  const groupeEtiquettes = L.layerGroup();
+  const groupeDouble = L.layerGroup();
+  quandPret.push(function () {
+    municipalites.forEach(function (m) {
+      L.marker(m.centre, {
+        icon: L.divIcon({ className: &#x27;etiquette&#x27;, html: &#x27;&lt;div&gt;&#x27; + esc(m.nom) + &#x27;&lt;/div&gt;&#x27;, iconSize: [0, 0] }),
+        interactive: false, keyboard: false
+      }).addTo(groupeEtiquettes);
+      if (m.qm &gt;= 4 &amp;&amp; m.qs &gt;= 4) {
+        L.circleMarker(m.centre, { radius: 7, color: &#x27;#fff&#x27;, weight: 1.5, fillColor: QCOL[5], fillOpacity: 0.95 })
+          .bindTooltip(&#x27;&lt;b&gt;&#x27; + esc(m.nom) + &#x27;&lt;/b&gt;&lt;br&gt;Double défavorisation&#x27;, { className: &#x27;infobulle&#x27;, direction: &#x27;top&#x27; })
+          .on(&#x27;click&#x27;, function () { selectionner(m, true); })
+          .addTo(groupeDouble);
+      }
+    });
+    groupeEtiquettes.addTo(carte);
+    controleCouches.addOverlay(groupeEtiquettes, &#x27;Noms des municipalités (zoom 9 et plus)&#x27;);
+    controleCouches.addOverlay(groupeDouble, &#x27;Double défavorisation (points)&#x27;);
+    masquerEtiquettesSelonZoom();
+  });
+<span class="cm">  // Événement zoomend : les noms n&#x27;apparaissent qu&#x27;à partir du zoom 9</span>
+  function masquerEtiquettesSelonZoom() {
+    carte.getContainer().classList.toggle(&#x27;sans-etiquettes&#x27;, carte.getZoom() &lt; 9);
+  } // fin masquerEtiquettesSelonZoom()
+  carte.on(&#x27;zoomend&#x27;, masquerEtiquettesSelonZoom);</code></pre></div>
+<h3>Comprendre le code</h3><ul class="comprendre"><li><b>Les événements de carte.</b> <code>mousemove</code> se déclenche à chaque mouvement du pointeur, <code>zoomend</code> à la fin d'un zoom, <code>locationfound</code> quand la position est trouvée.</li><li><b>Des étiquettes en HTML.</b> <code>L.divIcon()</code> remplace l'icône bleue habituelle d'un marqueur par du HTML : ici, le nom de la municipalité, centré sur son centre géométrique.</li><li><b>Les noms selon le zoom.</b> Plutôt que de retirer la couche (ce qui décocherait sa case), on ajoute une classe CSS à la carte sous le zoom 9 pour masquer les étiquettes.</li></ul>
+<div class="encadre ok"><div class="encadre-tete">✅ Résultat attendu</div><ul><li>Sous le zoom, les boutons ⌂ (vue d'ensemble) et ⌖ (me localiser).</li><li>En bas à droite, la latitude, la longitude et le niveau de zoom suivent le pointeur.</li><li>En zoomant (niveau 9 et plus), les noms apparaissent. Le sélecteur propose deux nouvelles couches : Noms des municipalités et Double défavorisation (points).</li></ul></div>
+<div class="encadre piege"><div class="encadre-tete">💡 Si ça ne fonctionne pas</div><ul><li>La localisation échoue en ouvrant le fichier par double-clic : les navigateurs l'exigent en https. Elle fonctionne une fois la carte publiée sur GitHub Pages.</li></ul></div>
+<div class="liens"><a class="lien-etape" href="etape09.html" target="_blank" rel="noopener">▶ Voir le résultat de l'étape 9</a><span>Pour comparer votre code : ouvrez ce résultat, puis <kbd>Ctrl</kbd>+<kbd>U</kbd>.</span></div>
+</section>
+<section class="etape" id="etape-10"><div class="etape-num">10</div>
+<h2>Le lien partageable et les exports</h2><p class="duree">Étape 10 sur 11 · environ 15 min</p>
+<p>Garder la vue dans l'adresse de la page (zoom, centre, indicateur, MRC, municipalité choisie) pour la partager, et exporter les municipalités du filtre en CSV ou en GeoJSON.</p>
+<div class="notions"><span>Leaflet :</span><code>getCenter() · getZoom()</code><code>setView()</code><code>on(&#x27;moveend&#x27;)</code><code>toGeoJSON()</code><code>Blob</code></div>
+<h3>Ce que vous faites</h3><ol>
+<li>Collez le bloc <b>Repère A</b> (CSS) dans la balise &lt;style&gt;, au-dessus de la ligne <code>/* ▲ REPÈRE A … */</code>.</li>
+<li>Collez le bloc <b>Repère B</b> (HTML) dans l'en-tête, au-dessus de la ligne <code>&lt;!-- ▲ REPÈRE B … --&gt;</code>.</li>
+<li>Collez le bloc <b>Repère D</b> (JavaScript) dans le script, au-dessus de la ligne <code>// ▲ REPÈRE D …</code>.</li>
+<li>Enregistrez (<kbd>Ctrl</kbd>+<kbd>S</kbd>), puis actualisez la page dans le navigateur (<kbd>F5</kbd>).</li></ol>
+<div class="code"><div class="code-tete"><span>Repère A · CSS</span><button class="copier" type="button">Copier</button></div><pre><code><span class="cm">    /* --- Étape 10 : boutons d&#x27;export masqués sur téléphone --- */</span>
+    @media (max-width: 800px) { .exporter { display: none; } }</code></pre></div>
+<div class="code"><div class="code-tete"><span>Repère B · HTML</span><button class="copier" type="button">Copier</button></div><pre><code>      &lt;button class=&quot;bouton&quot; id=&quot;bouton-lien&quot; title=&quot;Copier un lien vers cette vue&quot;&gt;🔗 Lien&lt;/button&gt;
+      &lt;button class=&quot;bouton exporter&quot; id=&quot;bouton-csv&quot; title=&quot;Exporter le tableau des municipalités du filtre&quot;&gt;⬇ CSV&lt;/button&gt;
+      &lt;button class=&quot;bouton exporter&quot; id=&quot;bouton-geojson&quot; title=&quot;Exporter la couche des municipalités du filtre&quot;&gt;⬇ GeoJSON&lt;/button&gt;</code></pre></div>
+<div class="code"><div class="code-tete"><span>Repère D · JavaScript</span><button class="copier" type="button">Copier</button></div><pre><code><span class="cm">  /* =================================================================</span>
+<span class="cm">     ÉTAPE 10 : lien partageable et exports</span>
+     ================================================================= */
+<span class="cm">  // L&#x27;adresse de la page garde la vue : #zoom/latitude/longitude/indicateur/MRC/code municipal</span>
+  function majLien() {
+    const c = carte.getCenter();
+    const morceaux = [carte.getZoom(), c.lat.toFixed(4), c.lng.toFixed(4), etat.indicateur,
+                      encodeURIComponent(etat.mrc), etat.selection ? etat.selection.code : &#x27;&#x27;];
+    try { history.replaceState(null, &#x27;&#x27;, &#x27;#&#x27; + morceaux.join(&#x27;/&#x27;)); } catch (erreur) { /* certains navigateurs refusent en local */ }
+  } // fin majLien()
+  function lireLien() {
+    const m = decodeURIComponent(location.hash.slice(1)).split(&#x27;/&#x27;);
+    if (m.length &lt; 3 || isNaN(Number(m[0]))) return;   // pas de vue dans l&#x27;adresse
+    if (NOMS_INDICATEURS[m[3]]) { etat.indicateur = m[3]; document.getElementById(&#x27;choix-indicateur&#x27;).value = m[3]; }
+    if (m[4] &amp;&amp; municipalites.some(function (x) { return x.mrc === m[4]; })) { etat.mrc = m[4]; document.getElementById(&#x27;choix-mrc&#x27;).value = m[4]; }
+    carte.setView([Number(m[1]), Number(m[2])], Number(m[0]));
+    if (m[5] &amp;&amp; trouverParCode(m[5])) selectionner(trouverParCode(m[5]), false);
+  } // fin lireLien()
+  quandPret.push(lireLien);
+  carte.on(&#x27;moveend&#x27;, majLien);       // après chaque déplacement ou zoom
+  quandRafraichir.push(majLien);
+  quandSelection.push(majLien);
+
+  document.getElementById(&#x27;bouton-lien&#x27;).onclick = function () {
+    majLien();
+    if (navigator.clipboard &amp;&amp; window.isSecureContext) {
+      navigator.clipboard.writeText(location.href).then(function () {
+        message(&#x27;Lien copié : la vue, l\&#x27;indicateur, la MRC et la sélection sont conservés.&#x27;);
+      });
+    } else {
+      message(&#x27;Copiez l\&#x27;adresse de la page : elle contient maintenant la vue en cours.&#x27;);
+    }
+  };
+
+<span class="cm">  // Exports : on fabrique un fichier en mémoire (Blob), puis on le télécharge</span>
+  function telecharger(contenu, type, nomFichier) {
+    const lien = document.createElement(&#x27;a&#x27;);
+    lien.href = URL.createObjectURL(new Blob([contenu], { type: type }));
+    lien.download = nomFichier;
+    document.body.appendChild(lien);
+    lien.click();
+    lien.remove();
+  } // fin telecharger()
+  function nomExport(extension) {
+    return &#x27;defavorisation_&#x27; + (etat.mrc ? sansAccents(etat.mrc).replace(/\W+/g, &#x27;_&#x27;) : &#x27;laurentides&#x27;) + &#x27;.&#x27; + extension;
+  } // fin nomExport()
+
+  document.getElementById(&#x27;bouton-csv&#x27;).onclick = function () {
+    const lignes = [[&#x27;code_mun&#x27;, &#x27;nom_mun&#x27;, &#x27;mrc&#x27;, &#x27;defav_mat_quintile&#x27;, &#x27;defav_soc_quintile&#x27;, &#x27;double_defavorisation&#x27;]];
+    dansLaPortee().forEach(function (m) {
+      lignes.push([m.code, m.nom, m.mrc, m.qm || &#x27;&#x27;, m.qs || &#x27;&#x27;, (m.qm &gt;= 4 &amp;&amp; m.qs &gt;= 4) ? &#x27;oui&#x27; : &#x27;non&#x27;]);
+    });
+    const csv = &#x27;﻿&#x27; + lignes.map(function (l) {      // ﻿ : Excel reconnaît les accents
+      return l.map(function (v) { v = String(v); return /[;&quot;]/.test(v) ? &#x27;&quot;&#x27; + v.replace(/&quot;/g, &#x27;&quot;&quot;&#x27;) + &#x27;&quot;&#x27; : v; }).join(&#x27;;&#x27;);
+    }).join(&#x27;\r\n&#x27;);
+    telecharger(csv, &#x27;text/csv;charset=utf-8&#x27;, nomExport(&#x27;csv&#x27;));
+  };
+  document.getElementById(&#x27;bouton-geojson&#x27;).onclick = function () {
+    const entites = dansLaPortee().map(function (m) {
+      return {
+        type: &#x27;Feature&#x27;,
+        properties: { code_mun: m.code, nom_mun: m.nom, mrc: m.mrc, defav_mat_quintile: m.qm, defav_soc_quintile: m.qs },
+        geometry: m.layer.toGeoJSON().geometry       // toGeoJSON() : le polygone Leaflet redevient du GeoJSON
+      };
+    });
+    telecharger(JSON.stringify({ type: &#x27;FeatureCollection&#x27;, features: entites }), &#x27;application/geo+json&#x27;, nomExport(&#x27;geojson&#x27;));
+  };</code></pre></div>
+<h3>Comprendre le code</h3><ul class="comprendre"><li><b>L'adresse comme mémoire.</b> Après chaque déplacement (<code>moveend</code>), on écrit la vue après le <code>#</code> de l'adresse, par exemple <code>#11/46.12/-74.59/soc/Les%20Laurentides/78102</code>. En ouvrant ce lien, <code>lireLien()</code> relit ces valeurs et restaure la vue.</li><li><b><code>toGeoJSON()</code></b> fait le chemin inverse de <code>L.geoJSON()</code> : il transforme un polygone Leaflet en géométrie GeoJSON.</li><li><b>Un fichier fabriqué dans le navigateur.</b> <code>new Blob()</code> crée un fichier en mémoire; un lien invisible le télécharge. Le caractère <code>\ufeff</code> au début du CSV permet à Excel de reconnaître les accents.</li></ul>
+<div class="encadre ok"><div class="encadre-tete">✅ Résultat attendu</div><ul><li>L'adresse de la page change quand on déplace la carte. Le bouton 🔗 Lien la copie (sur GitHub Pages).</li><li>⬇ CSV télécharge un tableau séparé par des points-virgules, lisible dans Excel. ⬇ GeoJSON télécharge les polygones du filtre, que QGIS peut ouvrir.</li></ul></div>
+<div class="encadre piege"><div class="encadre-tete">💡 Si ça ne fonctionne pas</div><ul><li>En local, certains navigateurs refusent de modifier l'adresse ou de copier dans le presse-papiers. Testez ces deux fonctions sur GitHub Pages.</li></ul></div>
+<div class="liens"><a class="lien-etape" href="etape10.html" target="_blank" rel="noopener">▶ Voir le résultat de l'étape 10</a><span>Pour comparer votre code : ouvrez ce résultat, puis <kbd>Ctrl</kbd>+<kbd>U</kbd>.</span></div>
+</section>
+<section class="etape" id="etape-11"><div class="etape-num">11</div>
+<h2>Les finitions</h2><p class="duree">Étape 11 sur 11 · environ 10 min</p>
+<p>Terminer la carte : panneau rétractable, taille du texte réglable (accessibilité), méthodologie dépliable, onglet Leaflet qui récapitule les fonctions utilisées, et touche Échap.</p>
+<div class="notions"><span>Leaflet :</span><code>invalidateSize()</code><code>L.Control.extend()</code><code>closePopup()</code></div>
+<h3>Ce que vous faites</h3><ol>
+<li>Collez le bloc <b>Repère A</b> (CSS) dans la balise &lt;style&gt;, au-dessus de la ligne <code>/* ▲ REPÈRE A … */</code>.</li>
+<li>Collez le bloc <b>Repère B</b> (HTML) dans l'en-tête, au-dessus de la ligne <code>&lt;!-- ▲ REPÈRE B … --&gt;</code>.</li>
+<li>Collez le bloc <b>Repère D</b> (JavaScript) dans le script, au-dessus de la ligne <code>// ▲ REPÈRE D …</code>.</li>
+<li>Enregistrez (<kbd>Ctrl</kbd>+<kbd>S</kbd>), puis actualisez la page dans le navigateur (<kbd>F5</kbd>).</li></ol>
+<div class="code"><div class="code-tete"><span>Repère A · CSS</span><button class="copier" type="button">Copier</button></div><pre><code><span class="cm">    /* --- Étape 11 : finitions --- */</span>
+    .taille-texte { display: flex; border: 1px solid var(--ligne); border-radius: 9px; overflow: hidden; height: 34px; }
+    .taille-texte button { width: 32px; background: none; border: 0; color: var(--texte2); font: inherit; font-weight: 700; cursor: pointer; }
+    .taille-texte button:hover { background: #ffffff14; color: var(--texte); }
+    .principal { transition: grid-template-columns .3s ease; }
+    .principal.replie { grid-template-columns: 0 1fr; }
+    .principal.replie .panneau { visibility: hidden; }
+    #bouton-panneau { position: absolute; top: calc(50% - 17px); left: 400px; z-index: 900; width: 26px; height: 34px;
+                      background: var(--panneau); color: var(--texte); border: 1px solid var(--ligne); border-radius: 0 8px 8px 0;
+                      cursor: pointer; transition: left .3s ease; }
+    .principal.replie #bouton-panneau { left: 0; }
+    .methodo { background: var(--panneau); border: 1px solid var(--ligne); border-radius: 12px; color: var(--texte2);
+               max-width: 360px; font-size: .8rem; line-height: 1.5; }
+    .methodo summary { padding: 7px 14px; cursor: pointer; }
+    .methodo[open] summary { border-bottom: 1px solid var(--ligne2); }
+    .methodo div { padding: 10px 14px; max-height: 50vh; overflow-y: auto; }
+    .methodo p + p { margin-top: 6px; }
+    .methodo b { color: var(--texte); }
+    .capacite { padding: 8px 0; border-bottom: 1px solid var(--ligne2); font-size: .8rem; color: var(--discret); }
+    .capacite b { display: block; color: var(--texte); font-size: .86rem; }
+    .capacite code { font-family: &quot;JetBrains Mono&quot;, monospace; font-size: .72rem; color: #5fd0cf; }
+    @media (max-width: 800px) {
+      #bouton-panneau, .taille-texte { display: none; }
+    }</code></pre></div>
+<div class="code"><div class="code-tete"><span>Repère B · HTML</span><button class="copier" type="button">Copier</button></div><pre><code>      &lt;div class=&quot;taille-texte&quot;&gt;&lt;button id=&quot;texte-moins&quot; title=&quot;Réduire le texte&quot;&gt;A−&lt;/button&gt;&lt;button id=&quot;texte-plus&quot; title=&quot;Agrandir le texte&quot;&gt;A+&lt;/button&gt;&lt;/div&gt;</code></pre></div>
+<div class="code"><div class="code-tete"><span>Repère D · JavaScript</span><button class="copier" type="button">Copier</button></div><pre><code><span class="cm">  /* =================================================================</span>
+<span class="cm">     ÉTAPE 11 : finitions (panneau rétractable, taille du texte,</span>
+     méthodologie, onglet Leaflet, touche Échap)
+     ================================================================= */
+<span class="cm">  // Panneau rétractable : un bouton créé en JavaScript</span>
+  const boutonPanneau = document.createElement(&#x27;button&#x27;);
+  boutonPanneau.id = &#x27;bouton-panneau&#x27;;
+  boutonPanneau.title = &#x27;Masquer ou afficher le panneau&#x27;;
+  boutonPanneau.textContent = &#x27;◀&#x27;;
+  document.querySelector(&#x27;.principal&#x27;).appendChild(boutonPanneau);
+  boutonPanneau.onclick = function () {
+    const principal = document.querySelector(&#x27;.principal&#x27;);
+    principal.classList.toggle(&#x27;replie&#x27;);
+    boutonPanneau.textContent = principal.classList.contains(&#x27;replie&#x27;) ? &#x27;▶&#x27; : &#x27;◀&#x27;;
+    setTimeout(function () { carte.invalidateSize(); }, 320);   // la carte recalcule sa taille
+  };
+
+<span class="cm">  // Taille du texte (accessibilité) : on change la variable CSS --taille</span>
+  let taille = 1;
+  function changerTaille(delta) {
+    taille = Math.max(0.85, Math.min(1.3, taille + delta));
+    document.documentElement.style.setProperty(&#x27;--taille&#x27;, taille + &#x27;rem&#x27;);
+  } // fin changerTaille()
+  document.getElementById(&#x27;texte-moins&#x27;).onclick = function () { changerTaille(-0.08); };
+  document.getElementById(&#x27;texte-plus&#x27;).onclick = function () { changerTaille(0.08); };
+
+<span class="cm">  // Méthodologie : encore un contrôle sur mesure, en bas à droite</span>
+  const Methodologie = L.Control.extend({
+    options: { position: &#x27;bottomright&#x27; },
+    onAdd: function () {
+      const boite = L.DomUtil.create(&#x27;details&#x27;, &#x27;methodo&#x27;);
+      boite.innerHTML = &#x27;&lt;summary&gt;ⓘ Méthodologie&lt;/summary&gt;&lt;div&gt;&#x27; +
+        &#x27;&lt;p&gt;&lt;b&gt;Indice de Pampalon.&lt;/b&gt; Dimension matérielle : scolarité, emploi, revenu. Dimension sociale : personnes seules, &#x27; +
+        &#x27;familles monoparentales, personnes séparées, divorcées ou veuves. Données de 2016 ramenées à la municipalité.&lt;/p&gt;&#x27; +
+        &#x27;&lt;p&gt;&lt;b&gt;Quintiles régionaux&lt;/b&gt; calculés parmi les municipalités des Laurentides : Q1 = 20 % les moins défavorisées, &#x27; +
+        &#x27;Q5 = 20 % les plus défavorisées.&lt;/p&gt;&#x27; +
+        &#x27;&lt;p&gt;&lt;b&gt;Mode croisé :&lt;/b&gt; Q1-Q2 faible, Q3 moyen, Q4-Q5 élevé. &lt;b&gt;Double défavorisation :&lt;/b&gt; les deux quintiles en Q4 ou Q5.&lt;/p&gt;&#x27; +
+        &#x27;&lt;p&gt;&lt;b&gt;MRC :&lt;/b&gt; déduite des deux premiers chiffres du code municipal. &lt;b&gt;Moyennes de quintiles :&lt;/b&gt; indicatives, &#x27; +
+        &#x27;non pondérées par la population. &lt;b&gt;Proximité :&lt;/b&gt; distance à vol d\&#x27;oiseau jusqu\&#x27;au centre de chaque municipalité.&lt;/p&gt;&#x27; +
+        &#x27;&lt;p style=&quot;color:var(--discret)&quot;&gt;Sources : INSPQ (indice de défavorisation), gouvernement du Québec (fonds de carte) · &#x27; +
+        &#x27;Santé Québec Laurentides, Direction de santé publique&lt;/p&gt;&lt;/div&gt;&#x27;;
+      L.DomEvent.disableClickPropagation(boite);
+      L.DomEvent.disableScrollPropagation(boite);
+      return boite;
+    }
+  });
+  new Methodologie().addTo(carte);
+
+<span class="cm">  // Un troisième onglet qui résume les fonctions de Leaflet utilisées</span>
+  const CAPACITES = [
+    [&#x27;Fonds de carte tuilés&#x27;, &#x27;L.tileLayer()&#x27;, 1],
+    [&#x27;Couche GeoJSON stylée&#x27;, &#x27;L.geoJSON({ style, onEachFeature })&#x27;, 1],
+    [&#x27;Info-bulles et survol&#x27;, &#x27;bindTooltip() · setStyle() · bringToFront()&#x27;, 1],
+    [&#x27;Sélecteur de couches et échelle&#x27;, &#x27;L.control.layers() · L.control.scale()&#x27;, 2],
+    [&#x27;Volets de superposition&#x27;, &#x27;createPane()&#x27;, 3],
+    [&#x27;Navigation animée&#x27;, &#x27;flyToBounds()&#x27;, 3],
+    [&#x27;Contrôle sur mesure (légende)&#x27;, &#x27;L.Control.extend()&#x27;, 4],
+    [&#x27;Style dynamique&#x27;, &#x27;setStyle()&#x27;, 4],
+    [&#x27;Emprise d\&#x27;un groupe&#x27;, &#x27;L.featureGroup().getBounds()&#x27;, 5],
+    [&#x27;Distances&#x27;, &#x27;distance()&#x27;, 8],
+    [&#x27;Cercles et fenêtres&#x27;, &#x27;L.circle() · L.popup()&#x27;, 8],
+    [&#x27;Événements de carte&#x27;, &quot;on(&#x27;click&#x27; | &#x27;contextmenu&#x27; | &#x27;mousemove&#x27; | &#x27;zoomend&#x27; | &#x27;moveend&#x27;)&quot;, 9],
+    [&#x27;Géolocalisation&#x27;, &#x27;locate()&#x27;, 9],
+    [&#x27;Étiquettes et points&#x27;, &#x27;L.divIcon() · L.circleMarker()&#x27;, 9],
+    [&#x27;Lien partageable&#x27;, &#x27;getCenter() · getZoom() · setView()&#x27;, 10],
+    [&#x27;Export&#x27;, &#x27;toGeoJSON()&#x27;, 10]
+  ];
+  const boutonOnglet = document.createElement(&#x27;button&#x27;);
+  boutonOnglet.dataset.onglet = &#x27;leaflet&#x27;;
+  boutonOnglet.textContent = &#x27;Leaflet&#x27;;
+  document.querySelector(&#x27;.onglets&#x27;).appendChild(boutonOnglet);
+  const sectionLeaflet = document.createElement(&#x27;section&#x27;);
+  sectionLeaflet.className = &#x27;onglet&#x27;;
+  sectionLeaflet.id = &#x27;onglet-leaflet&#x27;;
+  sectionLeaflet.innerHTML = &#x27;&lt;p class=&quot;indice&quot;&gt;Les fonctions de Leaflet utilisées dans cette carte, et l\&#x27;étape du tutoriel où elles apparaissent.&lt;/p&gt;&#x27; +
+    CAPACITES.map(function (c) {
+      return &#x27;&lt;div class=&quot;capacite&quot;&gt;&lt;b&gt;&#x27; + c[0] + &#x27;&lt;/b&gt;&lt;code&gt;&#x27; + esc(c[1]) + &#x27;&lt;/code&gt; · étape &#x27; + c[2] + &#x27;&lt;/div&gt;&#x27;;
+    }).join(&#x27;&#x27;);
+  document.getElementById(&#x27;panneau&#x27;).appendChild(sectionLeaflet);
+
+<span class="cm">  // Touche Échap : annule le mode « point » et ferme les fenêtres</span>
+  document.addEventListener(&#x27;keydown&#x27;, function (e) {
+    if (e.key !== &#x27;Escape&#x27;) return;
+    if (modePoint) basculerModePoint();
+    carte.closePopup();
+  });
+  window.addEventListener(&#x27;resize&#x27;, function () { carte.invalidateSize(); });</code></pre></div>
+<h3>Comprendre le code</h3><ul class="comprendre"><li><b><code>invalidateSize()</code></b> demande à Leaflet de recalculer la taille de la carte. Sans lui, après avoir replié le panneau, une bande grise resterait à gauche.</li><li><b>La méthodologie</b> utilise la balise HTML <code>&lt;details&gt;</code>, qui se déplie toute seule au clic, placée dans un contrôle Leaflet en bas à droite.</li><li><b>Créer des éléments en JavaScript.</b> Le bouton du panneau et le troisième onglet sont créés avec <code>document.createElement()</code> : pas besoin de modifier le HTML de l'étape 1.</li></ul>
+<div class="encadre ok"><div class="encadre-tete">✅ Résultat attendu</div><ul><li>Le bouton ◀ au bord du panneau le replie; ▶ le rouvre, et la carte occupe toute la largeur.</li><li>A− et A+ réduisent ou agrandissent tout le texte de l'interface.</li><li>« ⓘ Méthodologie » se déplie en bas à droite. L'onglet Leaflet liste les fonctions utilisées et l'étape de chacune.</li><li>Votre carte est terminée : elle reprend les capacités de carte_defavorisation_plus.html.</li></ul></div>
+<div class="liens"><a class="lien-etape" href="etape11.html" target="_blank" rel="noopener">▶ Voir le résultat de l'étape 11</a><span>Pour comparer votre code : ouvrez ce résultat, puis <kbd>Ctrl</kbd>+<kbd>U</kbd>.</span></div>
+</section>
+
+<h2 class="section-title">Publier votre carte</h2>
+<div class="carte-intro">
+  <ol>
+    <li>Dans votre dépôt GitHub du module 3 : <b>Add file &gt; Upload files</b>, déposez <code>carte_analyse.html</code>, puis <b>Commit changes</b>. Le fichier <code>laurentides_defavorisation.js</code> y est déjà.</li>
+    <li>Après 1 à 2 minutes, la carte est en ligne à l'adresse <code>https://[votrenom].github.io/[votre-depot]/carte_analyse.html</code>.</li>
+    <li>Testez sur GitHub Pages les deux fonctions qui exigent le https : 🔗 Lien et ⌖ Me localiser.</li>
+    <li>Ajoutez le lien dans le <code>README.md</code> du dépôt.</li>
+  </ol>
+  <p style="color:var(--ink2)"><b>Pour aller plus loin :</b> ajoutez une colonne au GeoJSON dans QGIS (population, score brut de l'indice) et affichez-la dans le profil; remplacez le quintile moyen par une moyenne pondérée par la population; ajoutez un fond de carte; comparez deux années.</p>
+</div>
+
+<footer>Santé Québec Laurentides, Direction de santé publique · Formation C.A.R.T.O.S. (QGIS, Leaflet, GitHub Pages) · Leaflet 1.9.4 · Fonds de carte : gouvernement du Québec · Données : INSPQ, indice de défavorisation matérielle et sociale</footer>
+</div>
+<script>
+var fs=1;function taille(d){fs=Math.max(.85,Math.min(1.35,fs+d*.08));document.documentElement.style.setProperty('--fs',fs+'rem');}
+document.querySelectorAll('.copier').forEach(function(b){
+  b.addEventListener('click',function(){
+    var texte=b.closest('.code').querySelector('code').textContent;
+    function ok(){b.textContent='Copié ✓';b.classList.add('fait');setTimeout(function(){b.textContent='Copier';b.classList.remove('fait');},1800);}
+    function secours(){var t=document.createElement('textarea');t.value=texte;t.style.position='fixed';t.style.opacity='0';document.body.appendChild(t);t.select();
+      try{document.execCommand('copy');ok();}catch(e){b.textContent='Sélectionnez le code';}t.remove();}
+    if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(texte).then(ok,secours);}else{secours();}
+  });
+});
+</script>
+</body>
+</html>
